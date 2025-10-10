@@ -1,8 +1,9 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
+    kotlin("jvm") version "2.0.21"
+    kotlin("plugin.spring") version "2.0.21"
     id("org.springframework.boot") version "3.5.6"
     id("io.spring.dependency-management") version "1.1.7"
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
 }
 
 group = "org.example"
@@ -27,6 +28,18 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.11.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+    // Blaze-Persistence + QueryDSL (Jakarta)
+    val blazeVersion = "1.6.17"
+    val querydslVersion = "5.1.0"
+    implementation("com.blazebit:blaze-persistence-core-api-jakarta:$blazeVersion")
+    implementation("com.blazebit:blaze-persistence-core-impl-jakarta:$blazeVersion")
+    implementation("com.blazebit:blaze-persistence-integration-hibernate-6.2:$blazeVersion")
+    implementation("com.blazebit:blaze-persistence-integration-querydsl-expressions-jakarta:$blazeVersion")
+
+    implementation("com.querydsl:querydsl-jpa:$querydslVersion:jakarta")
+    ksp("io.github.openfeign.querydsl:querydsl-ksp-codegen:6.12")
+
 
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")

@@ -14,15 +14,14 @@ open class OrderEntity(
     open var id: Long? = null,
     @Type(JsonType::class)
     @Column(columnDefinition = "jsonb")
-    open var orderDetails: OrderDetails
+    open var orderDetails: OrderDetails = OrderDetails()
 )
 
 data class OrderDetails(
-
-    val allocations: List<Allocation>
+    val allocations: List<Allocation> = emptyList()
 )
 
 data class Allocation(
-    val id: String,
-    val quantity: Int
+    val id: String = "",
+    val quantity: Int = 0
 )
