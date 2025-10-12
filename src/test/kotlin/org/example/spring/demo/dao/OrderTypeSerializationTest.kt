@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.example.spring.demo.dao.model.*
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 class OrderTypeSerializationTest {
 
@@ -25,7 +26,7 @@ class OrderTypeSerializationTest {
 
     @Test
     fun `serialize OrderDetails with Limit orderType contains type and price and deserializes back to Limit`() {
-        val details = OrderDetails(orderType = Limit(price = 123))
+        val details = OrderDetails(orderType = Limit(price = BigDecimal("123")))
 
         val json = mapper.writeValueAsString(details)
 
@@ -35,7 +36,7 @@ class OrderTypeSerializationTest {
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(Limit::class.java)
         val limit = decoded.orderType as Limit
-        assertThat(limit.price).isEqualTo(123)
+        assertThat(limit.price).isEqualTo(BigDecimal("123"))
     }
 
     @Test
@@ -57,24 +58,24 @@ class OrderTypeSerializationTest {
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(Limit::class.java)
         val limit = decoded.orderType as Limit
-        assertThat(limit.price).isEqualTo(456)
+        assertThat(limit.price).isEqualTo(BigDecimal("456"))
     }
 
     @Test
     fun `serialize and deserialize StopLoss`() {
-        val details = OrderDetails(orderType = StopLoss(stopPrice = 250))
+        val details = OrderDetails(orderType = StopLoss(stopPrice = BigDecimal("250")))
         val json = mapper.writeValueAsString(details)
         assertThat(json).contains("\"type\":\"STOP_LOSS\"")
         assertThat(json).contains("\"stopPrice\":250")
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(StopLoss::class.java)
         val sl = decoded.orderType as StopLoss
-        assertThat(sl.stopPrice).isEqualTo(250)
+        assertThat(sl.stopPrice).isEqualTo(BigDecimal("250"))
     }
 
     @Test
     fun `serialize and deserialize StopLimit`() {
-        val details = OrderDetails(orderType = StopLimit(stopPrice = 260, limitPrice = 255))
+        val details = OrderDetails(orderType = StopLimit(stopPrice = BigDecimal("260"), limitPrice = BigDecimal("255")))
         val json = mapper.writeValueAsString(details)
         assertThat(json).contains("\"type\":\"STOP_LIMIT\"")
         assertThat(json).contains("\"stopPrice\":260")
@@ -82,8 +83,8 @@ class OrderTypeSerializationTest {
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(StopLimit::class.java)
         val sl = decoded.orderType as StopLimit
-        assertThat(sl.stopPrice).isEqualTo(260)
-        assertThat(sl.limitPrice).isEqualTo(255)
+        assertThat(sl.stopPrice).isEqualTo(BigDecimal("260"))
+        assertThat(sl.limitPrice).isEqualTo(BigDecimal("255"))
     }
 
     @Test
@@ -97,14 +98,14 @@ class OrderTypeSerializationTest {
 
     @Test
     fun `serialize and deserialize LimitOnClose`() {
-        val details = OrderDetails(orderType = LimitOnClose(price = 200))
+        val details = OrderDetails(orderType = LimitOnClose(price = BigDecimal("200")))
         val json = mapper.writeValueAsString(details)
         assertThat(json).contains("\"type\":\"LIMIT_ON_CLOSE\"")
         assertThat(json).contains("\"price\":200")
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(LimitOnClose::class.java)
         val loc = decoded.orderType as LimitOnClose
-        assertThat(loc.price).isEqualTo(200)
+        assertThat(loc.price).isEqualTo(BigDecimal("200"))
     }
 
     @Test
@@ -115,7 +116,7 @@ class OrderTypeSerializationTest {
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(StopLoss::class.java)
         val sl = decoded.orderType as StopLoss
-        assertThat(sl.stopPrice).isEqualTo(300)
+        assertThat(sl.stopPrice).isEqualTo(BigDecimal("300"))
     }
 
     @Test
@@ -126,8 +127,8 @@ class OrderTypeSerializationTest {
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(StopLimit::class.java)
         val sl = decoded.orderType as StopLimit
-        assertThat(sl.stopPrice).isEqualTo(310)
-        assertThat(sl.limitPrice).isEqualTo(305)
+        assertThat(sl.stopPrice).isEqualTo(BigDecimal("310"))
+        assertThat(sl.limitPrice).isEqualTo(BigDecimal("305"))
     }
 
     @Test
@@ -147,6 +148,6 @@ class OrderTypeSerializationTest {
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(LimitOnClose::class.java)
         val loc = decoded.orderType as LimitOnClose
-        assertThat(loc.price).isEqualTo(220)
+        assertThat(loc.price).isEqualTo(BigDecimal("220"))
     }
 }

@@ -8,6 +8,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.Type
+import java.math.BigDecimal
 
 @Table(name = "orders")
 @Entity
@@ -42,18 +43,18 @@ class Market() : OrderType
 
 @JsonTypeName("LIMIT")
 data class Limit(
-    val price: Int = 0
+    val price: BigDecimal = BigDecimal.ZERO
 ) : OrderType
 
 @JsonTypeName("STOP_LOSS")
 data class StopLoss(
-    val stopPrice: Int = 0
+    val stopPrice: BigDecimal = BigDecimal.ZERO
 ) : OrderType
 
 @JsonTypeName("STOP_LIMIT")
 data class StopLimit(
-    val stopPrice: Int = 0,
-    val limitPrice: Int = 0
+    val stopPrice: BigDecimal = BigDecimal.ZERO,
+    val limitPrice: BigDecimal = BigDecimal.ZERO
 ) : OrderType
 
 @JsonTypeName("MARKET_ON_CLOSE")
@@ -61,5 +62,5 @@ class MarketOnClose() : OrderType
 
 @JsonTypeName("LIMIT_ON_CLOSE")
 data class LimitOnClose(
-    val price: Int = 0
+    val price: BigDecimal = BigDecimal.ZERO
 ) : OrderType
