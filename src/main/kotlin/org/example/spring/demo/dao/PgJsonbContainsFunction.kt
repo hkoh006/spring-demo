@@ -10,12 +10,11 @@ import com.blazebit.persistence.spi.JpqlFunction
  */
 class PgJsonbContainsFunction : JpqlFunction {
     override fun hasArguments(): Boolean {
-        return true;
-
+        return true
     }
 
     override fun hasParenthesesIfNoArguments(): Boolean {
-        return true;
+        return true
     }
 
     override fun getReturnType(p0: Class<*>?): Class<*>? {
@@ -35,5 +34,4 @@ class PgJsonbContainsFunction : JpqlFunction {
         context.addChunk(" as jsonb)")
         context.addChunk(")")
     }
-
 }

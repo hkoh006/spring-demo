@@ -9,10 +9,8 @@ import jakarta.persistence.EntityManagerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-
 @Configuration
 class BlazePersistenceConfig {
-
     @Bean
     fun criteriaBuilderFactory(emf: EntityManagerFactory): CriteriaBuilderFactory {
         val default = Criteria.getDefault()
@@ -22,7 +20,10 @@ class BlazePersistenceConfig {
     }
 
     @Bean
-    fun blazeJPAQueryFactory(entityManager: EntityManager, cbf: CriteriaBuilderFactory): BlazeJPAQueryFactory {
+    fun blazeJPAQueryFactory(
+        entityManager: EntityManager,
+        cbf: CriteriaBuilderFactory,
+    ): BlazeJPAQueryFactory {
         return BlazeJPAQueryFactory(entityManager, cbf)
     }
 }

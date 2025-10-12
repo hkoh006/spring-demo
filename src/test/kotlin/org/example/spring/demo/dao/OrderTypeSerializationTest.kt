@@ -3,12 +3,17 @@ package org.example.spring.demo.dao
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
-import org.example.spring.demo.dao.model.*
+import org.example.spring.demo.dao.model.Limit
+import org.example.spring.demo.dao.model.LimitOnClose
+import org.example.spring.demo.dao.model.Market
+import org.example.spring.demo.dao.model.MarketOnClose
+import org.example.spring.demo.dao.model.OrderDetails
+import org.example.spring.demo.dao.model.StopLimit
+import org.example.spring.demo.dao.model.StopLoss
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class OrderTypeSerializationTest {
-
     private val mapper = jacksonObjectMapper()
 
     @Test
@@ -41,9 +46,10 @@ class OrderTypeSerializationTest {
 
     @Test
     fun `deserialize raw JSON with MARKET to OrderDetails`() {
-        val json = """
+        val json =
+            """
             {"orderType": {"type": "MARKET"}}
-        """.trimIndent()
+            """.trimIndent()
 
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(Market::class.java)
@@ -51,9 +57,10 @@ class OrderTypeSerializationTest {
 
     @Test
     fun `deserialize raw JSON with LIMIT to OrderDetails`() {
-        val json = """
+        val json =
+            """
             {"orderType": {"type": "LIMIT", "price": 456}}
-        """.trimIndent()
+            """.trimIndent()
 
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(Limit::class.java)
@@ -110,9 +117,10 @@ class OrderTypeSerializationTest {
 
     @Test
     fun `deserialize raw JSON with STOP_LOSS to OrderDetails`() {
-        val json = """
+        val json =
+            """
             {"orderType": {"type": "STOP_LOSS", "stopPrice": 300}}
-        """.trimIndent()
+            """.trimIndent()
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(StopLoss::class.java)
         val sl = decoded.orderType as StopLoss
@@ -121,9 +129,10 @@ class OrderTypeSerializationTest {
 
     @Test
     fun `deserialize raw JSON with STOP_LIMIT to OrderDetails`() {
-        val json = """
+        val json =
+            """
             {"orderType": {"type": "STOP_LIMIT", "stopPrice": 310, "limitPrice": 305}}
-        """.trimIndent()
+            """.trimIndent()
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(StopLimit::class.java)
         val sl = decoded.orderType as StopLimit
@@ -133,18 +142,20 @@ class OrderTypeSerializationTest {
 
     @Test
     fun `deserialize raw JSON with MARKET_ON_CLOSE to OrderDetails`() {
-        val json = """
+        val json =
+            """
             {"orderType": {"type": "MARKET_ON_CLOSE"}}
-        """.trimIndent()
+            """.trimIndent()
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(MarketOnClose::class.java)
     }
 
     @Test
     fun `deserialize raw JSON with LIMIT_ON_CLOSE to OrderDetails`() {
-        val json = """
+        val json =
+            """
             {"orderType": {"type": "LIMIT_ON_CLOSE", "price": 220}}
-        """.trimIndent()
+            """.trimIndent()
         val decoded: OrderDetails = mapper.readValue(json)
         assertThat(decoded.orderType).isInstanceOf(LimitOnClose::class.java)
         val loc = decoded.orderType as LimitOnClose

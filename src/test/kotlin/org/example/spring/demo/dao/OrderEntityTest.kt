@@ -17,18 +17,19 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @SpringBootTest
 class OrderEntityTest() {
     @Autowired
-     lateinit var orderJdbcRepository: OrderJdbcRepository
+    lateinit var orderJdbcRepository: OrderJdbcRepository
 
     @Autowired
     lateinit var orderJpaRepository: OrderJpaRepository
 
     companion object {
         @Container
-        val postgres = PostgreSQLContainer<Nothing>("postgres:16-alpine").apply {
-            withDatabaseName("testdb")
-            withUsername("test")
-            withPassword("test")
-        }
+        val postgres =
+            PostgreSQLContainer<Nothing>("postgres:16-alpine").apply {
+                withDatabaseName("testdb")
+                withUsername("test")
+                withPassword("test")
+            }
 
         @JvmStatic
         @DynamicPropertySource
@@ -43,20 +44,22 @@ class OrderEntityTest() {
 
     @Test
     fun `persist and read order with jsonb`() {
-        val order = OrderEntity(
-            id = 1L,
-            orderDetails = OrderDetails(
-                allocations = listOf(
-                    Allocation(id = "a1", quantity = 3),
-                    Allocation(id = "a2", quantity = 5)
-                )
+        val order =
+            OrderEntity(
+                id = 1L,
+                orderDetails =
+                    OrderDetails(
+                        allocations =
+                            listOf(
+                                Allocation(id = "a1", quantity = 3),
+                                Allocation(id = "a2", quantity = 5),
+                            ),
+                    ),
             )
-        )
         orderJpaRepository.save(order)
 
         Assertions.assertThat(orderJpaRepository.findAll()).isNotEmpty
 
         println(orderJdbcRepository.findAll().map { it.orderDetails })
-
     }
 }

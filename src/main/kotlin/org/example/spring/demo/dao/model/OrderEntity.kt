@@ -15,26 +15,25 @@ import java.math.BigDecimal
 open class OrderEntity(
     @Id
     open var id: Long? = null,
-
     @Type(JsonType::class)
     @Column(columnDefinition = "jsonb")
-    open var orderDetails: OrderDetails = OrderDetails()
+    open var orderDetails: OrderDetails = OrderDetails(),
 )
 
 data class OrderDetails(
     val allocations: List<Allocation> = emptyList(),
-    val orderType: OrderType = Market()
+    val orderType: OrderType = Market(),
 )
 
 data class Allocation(
     val id: String = "",
-    val quantity: Int = 0
+    val quantity: Int = 0,
 )
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
-    property = "type"
+    property = "type",
 )
 sealed interface OrderType
 
@@ -43,18 +42,18 @@ class Market() : OrderType
 
 @JsonTypeName("LIMIT")
 data class Limit(
-    val price: BigDecimal = BigDecimal.ZERO
+    val price: BigDecimal = BigDecimal.ZERO,
 ) : OrderType
 
 @JsonTypeName("STOP_LOSS")
 data class StopLoss(
-    val stopPrice: BigDecimal = BigDecimal.ZERO
+    val stopPrice: BigDecimal = BigDecimal.ZERO,
 ) : OrderType
 
 @JsonTypeName("STOP_LIMIT")
 data class StopLimit(
     val stopPrice: BigDecimal = BigDecimal.ZERO,
-    val limitPrice: BigDecimal = BigDecimal.ZERO
+    val limitPrice: BigDecimal = BigDecimal.ZERO,
 ) : OrderType
 
 @JsonTypeName("MARKET_ON_CLOSE")
@@ -62,5 +61,5 @@ class MarketOnClose() : OrderType
 
 @JsonTypeName("LIMIT_ON_CLOSE")
 data class LimitOnClose(
-    val price: BigDecimal = BigDecimal.ZERO
+    val price: BigDecimal = BigDecimal.ZERO,
 ) : OrderType

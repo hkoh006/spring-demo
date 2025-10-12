@@ -10,9 +10,8 @@ import org.springframework.stereotype.Repository
 @Repository
 class OrderJdbcRepository(
     private val entityManager: EntityManager,
-    private val criteriaBuilderFactory: CriteriaBuilderFactory
+    private val criteriaBuilderFactory: CriteriaBuilderFactory,
 ) {
-
     private val order = QOrderEntity.orderEntity
 
     fun findAll(): List<OrderEntity> {
@@ -21,5 +20,4 @@ class OrderJdbcRepository(
             .from(order)
             .fetch()
     }
-
 }

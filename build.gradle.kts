@@ -4,6 +4,7 @@ plugins {
     id("org.springframework.boot") version "3.5.6"
     id("io.spring.dependency-management") version "1.1.7"
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
 }
 
 group = "org.example.spring.demo"
@@ -41,7 +42,6 @@ dependencies {
     implementation("com.querydsl:querydsl-jpa:$querydslVersion:jakarta")
     ksp("io.github.openfeign.querydsl:querydsl-ksp-codegen:6.12")
 
-
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
@@ -58,4 +58,13 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+ktlint {
+    android.set(false)
+    outputToConsole.set(true)
+    ignoreFailures.set(false)
+    filter {
+        exclude("**/build/**")
+    }
 }
