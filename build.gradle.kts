@@ -1,10 +1,13 @@
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+
 plugins {
-    kotlin("jvm") version "2.0.21"
-    kotlin("plugin.spring") version "2.0.21"
+    kotlin("jvm") version "2.2.20"
+    kotlin("plugin.spring") version "2.2.20"
     id("org.springframework.boot") version "3.5.6"
     id("io.spring.dependency-management") version "1.1.7"
-    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.4"
+    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
+    id("com.github.ben-manes.versions") version "0.53.0"
 }
 
 group = "org.example.spring.demo"
@@ -40,7 +43,7 @@ dependencies {
     implementation("com.blazebit:blaze-persistence-integration-querydsl-expressions-jakarta:$blazeVersion")
 
     implementation("com.querydsl:querydsl-jpa:$querydslVersion:jakarta")
-    ksp("io.github.openfeign.querydsl:querydsl-ksp-codegen:6.12")
+    ksp("io.github.openfeign.querydsl:querydsl-ksp-codegen:7.0")
 
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -67,4 +70,19 @@ ktlint {
     filter {
         exclude("**/build/**")
     }
+}
+
+// Dependency Updates configuration (stable releases only)
+// Run: ./gradlew dependencyUpdates --refresh-dependencies
+tasks.withType<DependencyUpdatesTask> {
+    fun isNonStable(version: String): Boolean {
+        val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
+        val regex = "^[0-9,.v-]+$".toRegex()
+        return !(stableKeyword || regex.matches(version))
+    }
+    rejectVersionIf {
+        isNonStable(candidate.version)
+    }
+    checkConstraints = true
+    gradleReleaseChannel = "current"
 }

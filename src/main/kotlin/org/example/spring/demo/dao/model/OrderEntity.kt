@@ -38,7 +38,7 @@ data class Allocation(
 sealed interface OrderType
 
 @JsonTypeName("MARKET")
-class Market() : OrderType
+class Market : OrderType
 
 @JsonTypeName("LIMIT")
 data class Limit(
@@ -57,7 +57,7 @@ data class StopLimit(
 ) : OrderType
 
 @JsonTypeName("MARKET_ON_CLOSE")
-class MarketOnClose() : OrderType
+class MarketOnClose : OrderType
 
 @JsonTypeName("LIMIT_ON_CLOSE")
 data class LimitOnClose(

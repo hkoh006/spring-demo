@@ -16,15 +16,18 @@ class OrderJdbcRepository(
 ) {
     private val order = QOrderEntity.orderEntity
 
-    fun findAll(): List<OrderEntity> {
-        return BlazeJPAQuery<OrderEntity>(entityManager, criteriaBuilderFactory)
+    private companion object {
+        private const val JSON_PATH_ALLOC_IDS = "'$.allocations[*].id'"
+    }
+
+    fun findAll(): List<OrderEntity> =
+        BlazeJPAQuery<OrderEntity>(entityManager, criteriaBuilderFactory)
             .select(order)
             .from(order)
             .fetch()
-    }
 
-    fun findAllWithIdsMatchingAny(allocationIds: List<String>): List<OrderEntity> {
-        return BlazeJPAQuery<OrderEntity>(entityManager, criteriaBuilderFactory)
+    fun findAllWithIdsMatchingAny(allocationIds: List<String>): List<OrderEntity> =
+        BlazeJPAQuery<OrderEntity>(entityManager, criteriaBuilderFactory)
             .select(order)
             .from(order)
             .where(
@@ -32,26 +35,18 @@ class OrderJdbcRepository(
                     Expressions.booleanTemplate(
                         "jsonb_contains_any_of(jsonb_path_query_array({0}, {1}), {2}) = true",
                         order.orderDetails,
-                        Expressions.stringTemplate("'$.allocations[*].id'"),
+                        Expressions.stringTemplate(JSON_PATH_ALLOC_IDS),
                         Expressions.stringTemplate(
-                            "'${
-                                allocationIds.joinToString(
-                                    prefix = "[",
-                                    postfix = "]",
-                                    separator = ",",
-                                ) { "\"$it\"" }
-                            }'",
+                            jsonTextArrayLiteral(allocationIds),
                         ),
                     )
                 } else {
                     BooleanBuilder()
                 },
-            )
-            .fetch()
-    }
+            ).fetch()
 
-    fun findAllWithIdsMatchingAll(allocationIds: List<String>): List<OrderEntity> {
-        return BlazeJPAQuery<OrderEntity>(entityManager, criteriaBuilderFactory)
+    fun findAllWithIdsMatchingAll(allocationIds: List<String>): List<OrderEntity> =
+        BlazeJPAQuery<OrderEntity>(entityManager, criteriaBuilderFactory)
             .select(order)
             .from(order)
             .where(
@@ -59,21 +54,20 @@ class OrderJdbcRepository(
                     Expressions.booleanTemplate(
                         "jsonb_contains(jsonb_path_query_array({0}, {1}), {2}) = true",
                         order.orderDetails,
-                        Expressions.stringTemplate("'$.allocations[*].id'"),
+                        Expressions.stringTemplate(JSON_PATH_ALLOC_IDS),
                         Expressions.stringTemplate(
-                            "'${
-                                allocationIds.joinToString(
-                                    prefix = "[",
-                                    postfix = "]",
-                                    separator = ",",
-                                ) { "\"$it\"" }
-                            }'",
+                            jsonTextArrayLiteral(allocationIds),
                         ),
                     )
                 } else {
                     BooleanBuilder()
                 },
-            )
-            .fetch()
+            ).fetch()
+
+    private fun jsonTextArrayLiteral(values: List<String>): String {
+        // Produces a SQL string literal representing a JSON text array, e.g. '[''a'',''b'']' wrapped in single quotes
+        if (values.isEmpty()) return "'[]'"
+        val joined = values.joinToString(prefix = "[", postfix = "]", separator = ",") { "\"$it\"" }
+        return "'$joined'"
     }
 }

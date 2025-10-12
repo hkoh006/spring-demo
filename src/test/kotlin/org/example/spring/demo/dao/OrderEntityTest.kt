@@ -57,15 +57,14 @@ class OrderEntityTest {
     private fun newOrder(
         id: Long,
         vararg allocationIds: String,
-    ): OrderEntity {
-        return OrderEntity(
+    ): OrderEntity =
+        OrderEntity(
             id = id,
             orderDetails =
                 OrderDetails(
                     allocations = allocationIds.mapIndexed { idx, s -> Allocation(id = s, quantity = idx + 1) },
                 ),
         )
-    }
 
     @Test
     fun `persist and read order with jsonb`() {
@@ -75,7 +74,12 @@ class OrderEntityTest {
         val all = orderJdbcRepository.findAll()
         assertThat(all).hasSize(1)
         assertThat(all.first().id).isEqualTo(1L)
-        assertThat(all.first().orderDetails.allocations.map { it.id }).containsExactlyInAnyOrder("a1", "a2")
+        assertThat(
+            all
+                .first()
+                .orderDetails.allocations
+                .map { it.id },
+        ).containsExactlyInAnyOrder("a1", "a2")
 
         // Any-of filter
         val anyA1 = orderJdbcRepository.findAllWithIdsMatchingAny(listOf("a1"))

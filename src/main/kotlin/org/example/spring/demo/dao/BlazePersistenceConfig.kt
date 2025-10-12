@@ -6,6 +6,9 @@ import com.blazebit.persistence.querydsl.BlazeJPAQueryFactory
 import com.blazebit.persistence.spi.JpqlFunctionGroup
 import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
+import org.example.spring.demo.dao.jpql.PgJsonbContainsAnyOfFunction
+import org.example.spring.demo.dao.jpql.PgJsonbContainsFunction
+import org.example.spring.demo.dao.jpql.PgJsonbPathQueryArrayFunction
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -29,7 +32,5 @@ class BlazePersistenceConfig {
     fun blazeJPAQueryFactory(
         entityManager: EntityManager,
         cbf: CriteriaBuilderFactory,
-    ): BlazeJPAQueryFactory {
-        return BlazeJPAQueryFactory(entityManager, cbf)
-    }
+    ): BlazeJPAQueryFactory = BlazeJPAQueryFactory(entityManager, cbf)
 }
