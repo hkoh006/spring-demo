@@ -1,0 +1,80 @@
+[versions]
+kotlin = "2.2.20"
+spring-boot = "3.5.6"
+spring-dependency-management = "1.1.7"
+ksp = "2.2.20-2.0.4"
+ktlint = "13.1.0"
+benmanes-versions = "0.53.0"
+blaze = "1.6.17"
+querydsl = "5.1.0"
+hypersistence = "3.11.0"
+querydsl-ksp = "7.0"
+testcontainers = "1.21.3"
+
+[libraries]
+# Spring BOM
+spring-boot-dependencies = { group = "org.springframework.boot", name = "spring-boot-dependencies", version.ref = "spring-boot" }
+
+# Spring starters and common libs (versions via BOM)
+spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+postgresql = { module = "org.postgresql:postgresql" }
+
+# Blaze-Persistence + QueryDSL
+blaze-core-api = { module = "com.blazebit:blaze-persistence-core-api-jakarta", version.ref = "blaze" }
+blaze-core-impl = { module = "com.blazebit:blaze-persistence-core-impl-jakarta", version.ref = "blaze" }
+blaze-hibernate62 = { module = "com.blazebit:blaze-persistence-integration-hibernate-6.2", version.ref = "blaze" }
+blaze-querydsl-expr = { module = "com.blazebit:blaze-persistence-integration-querydsl-expressions-jakarta", version.ref = "blaze" }
+querydsl-jpa = { module = "com.querydsl:querydsl-jpa", version.ref = "querydsl" }
+querydsl-ksp-codegen = { module = "io.github.openfeign.querydsl:querydsl-ksp-codegen", version.ref = "querydsl-ksp" }
+
+# Hypersistence
+hypersistence-utils-hibernate63 = { module = "io.hypersistence:hypersistence-utils-hibernate-63", version.ref = "hypersistence" }
+
+# Testing
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+
+[bundles]
+# Spring starter bundle (commonly used web + JPA + base + Kotlin integration)
+spring-starters = [
+  "spring-boot-starter",
+  "spring-boot-starter-web",
+  "spring-boot-starter-data-jpa",
+  "jackson-module-kotlin",
+  "kotlin-reflect"
+]
+
+# Blaze-Persistence with QueryDSL (Jakarta)
+blaze-querydsl = [
+  "blaze-core-api",
+  "blaze-core-impl",
+  "blaze-hibernate62",
+  "blaze-querydsl-expr"
+]
+
+# Test bundles
+testing-core = [
+  "spring-boot-starter-test",
+  "junit-platform-launcher"
+]
+
+testcontainers = [
+  "testcontainers-postgresql",
+  "testcontainers-junit-jupiter"
+]
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+benmanes-versions = { id = "com.github.ben-manes.versions", version.ref = "benmanes-versions" }

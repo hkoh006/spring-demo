@@ -1,13 +1,13 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
-    kotlin("jvm") version "2.2.20"
-    kotlin("plugin.spring") version "2.2.20"
-    id("org.springframework.boot") version "3.5.6"
-    id("io.spring.dependency-management") version "1.1.7"
-    id("com.google.devtools.ksp") version "2.2.20-2.0.4"
-    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
-    id("com.github.ben-manes.versions") version "0.53.0"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.spring.dependency.management)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.benmanes.versions)
 }
 
 group = "org.example.spring.demo"
@@ -24,33 +24,30 @@ repositories {
     mavenCentral()
 }
 
+val versionCatalog = the<VersionCatalogsExtension>().named("libs")
+val querydslVersion = versionCatalog.findVersion("querydsl").get().requiredVersion
+
 dependencies {
-    // spring bom
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.5.6"))
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.11.0")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    // Spring BOM (manages versions for many dependencies)
+    implementation(platform(libs.spring.boot.dependencies))
+
+    // Bundled Spring starters and common Kotlin/Jackson
+    implementation(libs.bundles.spring.starters)
+
+    // Hypersistence utilities
+    implementation(libs.hypersistence.utils.hibernate63)
 
     // Blaze-Persistence + QueryDSL (Jakarta)
-    val blazeVersion = "1.6.17"
-    val querydslVersion = "5.1.0"
-    implementation("com.blazebit:blaze-persistence-core-api-jakarta:$blazeVersion")
-    implementation("com.blazebit:blaze-persistence-core-impl-jakarta:$blazeVersion")
-    implementation("com.blazebit:blaze-persistence-integration-hibernate-6.2:$blazeVersion")
-    implementation("com.blazebit:blaze-persistence-integration-querydsl-expressions-jakarta:$blazeVersion")
+    implementation(libs.bundles.blaze.querydsl)
+    implementation(variantOf(libs.querydsl.jpa) { classifier("jakarta") })
+    ksp(libs.querydsl.ksp.codegen)
 
-    implementation("com.querydsl:querydsl-jpa:$querydslVersion:jakarta")
-    ksp("io.github.openfeign.querydsl:querydsl-ksp-codegen:7.0")
+    runtimeOnly(libs.postgresql)
 
-    runtimeOnly("org.postgresql:postgresql")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.testcontainers:postgresql:1.21.3")
-    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // Testing bundles
+    testImplementation(libs.bundles.testing.core)
+    testImplementation(kotlin("test-junit5"))
+    testImplementation(libs.bundles.testcontainers)
 }
 
 kotlin {
