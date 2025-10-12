@@ -1,11 +1,11 @@
-package org.example.demowithnativeimage
+package org.example.spring.demo
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class DemoWithNativeImageApplication
+class SpringDemoApplication
 
 fun main(args: Array<String>) {
-    runApplication<DemoWithNativeImageApplication>(*args)
+    runApplication<SpringDemoApplication>(*args)
 }

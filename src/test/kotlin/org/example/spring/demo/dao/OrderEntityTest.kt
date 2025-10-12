@@ -1,6 +1,9 @@
-package org.example.demowithnativeimage
+package org.example.spring.demo.dao
 
 import org.assertj.core.api.Assertions
+import org.example.spring.demo.dao.model.Allocation
+import org.example.spring.demo.dao.model.OrderDetails
+import org.example.spring.demo.dao.model.OrderEntity
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -17,7 +20,7 @@ class OrderEntityTest() {
      lateinit var orderJdbcRepository: OrderJdbcRepository
 
     @Autowired
-    lateinit var orderRepository: OrderRepository
+    lateinit var orderJpaRepository: OrderJpaRepository
 
     companion object {
         @Container
@@ -34,13 +37,12 @@ class OrderEntityTest() {
             registry.add("spring.datasource.username") { postgres.username }
             registry.add("spring.datasource.password") { postgres.password }
             registry.add("spring.datasource.driver-class-name") { "org.postgresql.Driver" }
-            registry.add("spring.jpa.hibernate.ddl-auto") { "create-drop" }
             registry.add("spring.jpa.properties.hibernate.dialect") { "org.hibernate.dialect.PostgreSQLDialect" }
         }
     }
 
     @Test
-    fun persistAndReadOrderWithJsonb() {
+    fun `persist and read order with jsonb`() {
         val order = OrderEntity(
             id = 1L,
             orderDetails = OrderDetails(
@@ -50,9 +52,9 @@ class OrderEntityTest() {
                 )
             )
         )
-        orderRepository.save(order)
+        orderJpaRepository.save(order)
 
-        Assertions.assertThat(orderRepository.findAll()).isNotEmpty
+        Assertions.assertThat(orderJpaRepository.findAll()).isNotEmpty
 
         println(orderJdbcRepository.findAll().map { it.orderDetails })
 

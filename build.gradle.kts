@@ -6,9 +6,9 @@ plugins {
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
 }
 
-group = "org.example"
+group = "org.example.spring.demo"
 version = "0.0.1-SNAPSHOT"
-description = "demo-with-native-image"
+description = "spring-demo"
 
 java {
     toolchain {
@@ -28,6 +28,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.11.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     // Blaze-Persistence + QueryDSL (Jakarta)
     val blazeVersion = "1.6.17"

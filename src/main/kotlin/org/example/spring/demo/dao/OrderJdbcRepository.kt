@@ -1,10 +1,11 @@
-package org.example.demowithnativeimage
+package org.example.spring.demo.dao
 
 import com.blazebit.persistence.CriteriaBuilderFactory
 import com.blazebit.persistence.querydsl.BlazeJPAQuery
 import jakarta.persistence.EntityManager
+import org.example.spring.demo.dao.model.OrderEntity
+import org.example.spring.demo.dao.model.QOrderEntity
 import org.springframework.stereotype.Repository
-
 
 @Repository
 class OrderJdbcRepository(
@@ -16,8 +17,8 @@ class OrderJdbcRepository(
 
     fun findAll(): List<OrderEntity> {
         return BlazeJPAQuery<List<OrderEntity>>(entityManager, criteriaBuilderFactory)
-            .from(order)
             .select(order)
+            .from(order)
             .fetch()
     }
 
