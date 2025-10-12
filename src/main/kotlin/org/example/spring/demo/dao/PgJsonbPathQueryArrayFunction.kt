@@ -8,7 +8,7 @@ import com.blazebit.persistence.spi.JpqlFunction
  * Usage in JPQL/Criteria: jsonb_contains(left, rightJson)
  * Renders to: (left @> cast(rightJson as jsonb))
  */
-class PgJsonbContainsFunction : JpqlFunction {
+class PgJsonbPathQueryArrayFunction : JpqlFunction {
     override fun hasArguments(): Boolean {
         return true
     }
@@ -17,16 +17,18 @@ class PgJsonbContainsFunction : JpqlFunction {
         return true
     }
 
-    override fun getReturnType(p0: Class<*>?): Class<*> {
-        return Boolean::class.java
+    override fun getReturnType(p0: Class<*>?): Class<*>? {
+        return p0
     }
 
     override fun render(context: FunctionRenderContext) {
         if (context.argumentsSize != 2) {
-            throw IllegalArgumentException("jsonb_contains expects exactly 2 arguments")
+            throw IllegalArgumentException("jsonb_path_query_array expects exactly 2 arguments")
         }
+        context.addChunk("jsonb_path_query_array(")
         context.addArgument(0)
-        context.addChunk(" @> ")
+        context.addChunk(", ")
         context.addArgument(1)
+        context.addChunk(")")
     }
 }

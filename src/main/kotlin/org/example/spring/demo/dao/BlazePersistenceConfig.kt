@@ -15,7 +15,13 @@ class BlazePersistenceConfig {
     fun criteriaBuilderFactory(emf: EntityManagerFactory): CriteriaBuilderFactory {
         val default = Criteria.getDefault()
         val jsonbContains = JpqlFunctionGroup("jsonb_contains", PgJsonbContainsFunction())
+        val jsonbContainsAnyOf = JpqlFunctionGroup("jsonb_contains_any_of", PgJsonbContainsAnyOfFunction())
+        val jsonbPathQueryArray = JpqlFunctionGroup("jsonb_path_query_array", PgJsonbPathQueryArrayFunction())
+
         default.registerFunction(jsonbContains)
+        default.registerFunction(jsonbContainsAnyOf)
+        default.registerFunction(jsonbPathQueryArray)
+
         return default.createCriteriaBuilderFactory(emf)
     }
 

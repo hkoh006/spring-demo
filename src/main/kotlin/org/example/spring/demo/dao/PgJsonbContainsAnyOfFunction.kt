@@ -8,7 +8,7 @@ import com.blazebit.persistence.spi.JpqlFunction
  * Usage in JPQL/Criteria: jsonb_contains(left, rightJson)
  * Renders to: (left @> cast(rightJson as jsonb))
  */
-class PgJsonbContainsFunction : JpqlFunction {
+class PgJsonbContainsAnyOfFunction : JpqlFunction {
     override fun hasArguments(): Boolean {
         return true
     }
@@ -23,10 +23,14 @@ class PgJsonbContainsFunction : JpqlFunction {
 
     override fun render(context: FunctionRenderContext) {
         if (context.argumentsSize != 2) {
-            throw IllegalArgumentException("jsonb_contains expects exactly 2 arguments")
+            throw IllegalArgumentException("jsonb_contains_any_of expects exactly 2 arguments")
         }
         context.addArgument(0)
-        context.addChunk(" @> ")
-        context.addArgument(1)
+        context.addChunk(" ??| array ")
+        context.addChunk(
+            context.getArgument(1).replace("\"", "'")
+                .removePrefix("'")
+                .removeSuffix("'"),
+        )
     }
 }
