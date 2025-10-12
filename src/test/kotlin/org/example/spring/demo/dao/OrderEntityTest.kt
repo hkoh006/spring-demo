@@ -2,6 +2,7 @@ package org.example.spring.demo.dao
 
 import org.assertj.core.api.Assertions.assertThat
 import org.example.spring.demo.dao.model.Allocation
+import org.example.spring.demo.dao.model.Market
 import org.example.spring.demo.dao.model.OrderDetails
 import org.example.spring.demo.dao.model.OrderEntity
 import org.junit.jupiter.api.AfterEach
@@ -63,6 +64,7 @@ class OrderEntityTest {
             orderDetails =
                 OrderDetails(
                     allocations = allocationIds.mapIndexed { idx, s -> Allocation(id = s, quantity = idx + 1) },
+                    orderType = Market(),
                 ),
         )
 

@@ -17,17 +17,17 @@ open class OrderEntity(
     open var id: Long? = null,
     @Type(JsonType::class)
     @Column(columnDefinition = "jsonb")
-    open var orderDetails: OrderDetails = OrderDetails(),
+    open var orderDetails: OrderDetails,
 )
 
 data class OrderDetails(
-    val allocations: List<Allocation> = emptyList(),
-    val orderType: OrderType = Market(),
+    val allocations: List<Allocation>,
+    val orderType: OrderType,
 )
 
 data class Allocation(
-    val id: String = "",
-    val quantity: Int = 0,
+    val id: String,
+    val quantity: Int,
 )
 
 @JsonTypeInfo(
