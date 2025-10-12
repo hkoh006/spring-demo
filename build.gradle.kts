@@ -65,7 +65,9 @@ ktlint {
     outputToConsole.set(true)
     ignoreFailures.set(false)
     filter {
+        // Exclude generated code and QueryDSL Q-classes
         exclude("**/build/**")
+        exclude("**/Q*.kt")
     }
 }
 
