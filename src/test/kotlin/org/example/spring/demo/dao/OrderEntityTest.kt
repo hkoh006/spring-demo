@@ -28,7 +28,7 @@ class OrderEntityTest {
     companion object {
         @Container
         val postgres =
-            PostgreSQLContainer<Nothing>("postgres:16-alpine").apply {
+            PostgreSQLContainer("postgres:17").apply {
                 withDatabaseName("testdb")
                 withUsername("test")
                 withPassword("test")
