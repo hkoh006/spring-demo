@@ -35,6 +35,9 @@ dependencies {
     // Bundled Spring starters and common Kotlin/Jackson
     implementation(libs.bundles.spring.starters)
 
+    // Spring Boot Testcontainers support (for runtime DB via containers)
+    implementation(libs.spring.boot.testcontainers)
+
     // Hypersistence utilities
     implementation(libs.hypersistence.utils.hibernate63)
 
@@ -44,11 +47,16 @@ dependencies {
     ksp(libs.querydsl.ksp.codegen)
 
     runtimeOnly(libs.postgresql)
+    // Testcontainers PostgreSQL at runtime (so app can start without local DB)
+    implementation(libs.testcontainers.postgresql)
 
     // Testing bundles
     testImplementation(libs.bundles.testing.core)
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.bundles.testcontainers)
+
+    // OpenAPI + Scalar UI (via springdoc)
+    implementation(libs.springdoc.openapi.starter.webmvc.scalar)
 }
 
 kotlin {

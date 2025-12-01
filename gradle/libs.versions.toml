@@ -10,14 +10,18 @@ querydsl = "5.1.0"
 hypersistence = "3.11.0"
 querydsl-ksp = "7.0"
 testcontainers = "1.21.3"
+springdoc = "2.8.14"
 
 [libraries]
 # Spring BOM
 spring-boot-dependencies = { group = "org.springframework.boot", name = "spring-boot-dependencies", version.ref = "spring-boot" }
+spring-boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
+springdoc-openapi-starter-webmvc-scalar = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-scalar", version.ref = "springdoc" }
 
 # Spring starters and common libs (versions via BOM)
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-websocket = { module = "org.springframework.boot:spring-boot-starter-websocket" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
@@ -46,6 +50,7 @@ testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", ve
 spring-starters = [
   "spring-boot-starter",
   "spring-boot-starter-web",
+  "spring-boot-starter-websocket",
   "spring-boot-starter-data-jpa",
   "jackson-module-kotlin",
   "kotlin-reflect"

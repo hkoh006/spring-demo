@@ -1,1 +1,13 @@
-spring.application.name: spring-demo
+spring:
+  application:
+    name: spring-demo
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    # No URL/credentials here: Spring Boot will use Testcontainers @ServiceConnection
+    # to obtain JDBC URL/username/password from the running container at startup.
+    # These placeholders are left intentionally blank.
