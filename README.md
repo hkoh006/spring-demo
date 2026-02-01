@@ -1,67 +1,82 @@
-# Spring Demo: Blaze-Persistence + QueryDSL on Spring Boot (Kotlin)
+# Spring Demo: Blaze-Persistence + QueryDSL on Spring Boot 4 (Kotlin)
 
-A small Spring Boot 3 (Kotlin) project that demonstrates:
+A multi-module Spring Boot 4 (Kotlin) project that demonstrates:
 - Type-safe querying with QueryDSL (Jakarta) backed by KSP code generation
-- Blaze-Persistence integration for advanced JPA criteria queries
+- Blaze-Persistence integration for advanced JPA criteria queries on Hibernate 7
 - PostgreSQL JSONB helpers exposed to JPA/Blaze (custom functions)
+- Multi-module Gradle setup with specialized runners (local dev vs. server)
+- Local development with Testcontainers (auto-provisioned PostgreSQL)
+- Scalar UI for interactive API documentation
+- WebSocket echo service
 - Practical Gradle Version Catalog usage with dependency bundles
-- Simple REST endpoint and JPA/JDBC repositories
-- Testcontainers-based integration tests against PostgreSQL
 
 ## What this project is doing
-This demo shows how to build a modern Spring Boot data layer combining Blaze-Persistence and QueryDSL on Hibernate 6 with Jakarta APIs. It also registers custom PostgreSQL JSONB functions so you can write expressive queries against JSONB columns using JPA/Blaze.
+This demo shows how to build a modern Spring Boot data layer combining Blaze-Persistence and QueryDSL on Hibernate 7 with Jakarta APIs. It also registers custom PostgreSQL JSONB functions so you can write expressive queries against JSONB columns using JPA/Blaze.
 
 Specifically, it includes:
-- Spring Boot web + data-jpa setup in Kotlin.
-- QueryDSL (Jakarta classifier) via KSP for code generation (no kapt needed).
-- Blaze-Persistence for criteria-style queries and QueryDSL expression integration.
-- Hypersistence Utils (Hibernate 6.3 artifact) for practical Hibernate features.
-- Custom JSONB functions for PostgreSQL exposed to JPA/Blaze:
+- **Spring Boot 4** web + data-jpa setup in Kotlin.
+- **QueryDSL (Jakarta classifier)** via KSP for code generation (no kapt needed).
+- **Blaze-Persistence** for criteria-style queries and QueryDSL expression integration.
+- **Hypersistence Utils (Hibernate 7.1 artifact)** for practical Hibernate features.
+- **Custom JSONB functions** for PostgreSQL exposed to JPA/Blaze:
   - `PgJsonbContainsFunction`
   - `PgJsonbContainsAnyOfFunction`
   - `PgJsonbPathQueryArrayFunction`
-- Integration tests using Testcontainers PostgreSQL.
+- **Multi-module setup**:
+  - `web-service`: The core application logic and data layer.
+  - `web-service-docker/local`: A local runner that automatically starts PostgreSQL via Testcontainers and enables Scalar UI.
+  - `web-service-docker/server`: A standard runner for production-like environments.
+- **WebSocket**: A simple Echo handler at `/ws/echo`.
+- **OpenAPI + Scalar UI**: Interactive documentation for the REST API.
 
 ## Tech stack and build
-- Kotlin, Spring Boot 3, Hibernate 6, JPA (Jakarta)
+- Kotlin, Spring Boot 4, Hibernate 7, JPA (Jakarta)
 - Blaze-Persistence, QueryDSL (jakarta), KSP codegen
 - Hypersistence Utils, PostgreSQL
+- SpringDoc OpenAPI + Scalar UI
 - Gradle with Version Catalog and bundles (see `gradle/libs.versions.toml`)
 
 Key Gradle bits:
 - Dependency bundles group common libraries:
-  - `bundles.spring-starters` for web + data-jpa + Jackson + Kotlin reflect
+  - `bundles.spring-starters` for web + data-jpa + WebSocket + Jackson + Kotlin reflect
   - `bundles.blaze-querydsl` for Blaze-Persistence modules
-  - `bundles.testing.core` and `bundles.testcontainers` for tests
+  - `bundles.testcontainers` for tests
 - QueryDSL JPA Jakarta is added with a classifier that TOML cannot express, so the build uses:
   - `implementation(variantOf(libs.querydsl.jpa) { classifier("jakarta") })`
 - KSP is used for QueryDSL code generation: `ksp(libs.querydsl.ksp.codegen)`
 
-See `build.gradle.kts` for details.
-
 ## Code map
-- App entry point: `src/main/kotlin/org/example/spring/demo/SpringDemoApplication.kt`
-- Simple controller: `src/main/kotlin/org/example/spring/demo/controller/TestController.kt`
-- Data model: `src/main/kotlin/org/example/spring/demo/dao/model/OrderEntity.kt`
-- JPA repo: `src/main/kotlin/org/example/spring/demo/dao/OrderJpaRepository.kt`
-- JDBC repo: `src/main/kotlin/org/example/spring/demo/dao/OrderJdbcRepository.kt`
-- Blaze/QueryDSL config: `src/main/kotlin/org/example/spring/demo/dao/BlazePersistenceConfig.kt`
-- Custom PostgreSQL JSONB functions:
-  - `src/main/kotlin/org/example/spring/demo/dao/jpql/PgJsonbContainsFunction.kt`
-  - `src/main/kotlin/org/example/spring/demo/dao/jpql/PgJsonbContainsAnyOfFunction.kt`
-  - `src/main/kotlin/org/example/spring/demo/dao/jpql/PgJsonbPathQueryArrayFunction.kt`
+- Core logic: `web-service/src/main/kotlin/org/example/spring/demo/`
+  - App entry: `SpringDemoApplication.kt`
+  - Controllers: `OrderController.kt`, `TestController.kt`
+  - WebSocket: `websocket/EchoWebSocketHandler.kt`
+  - Data model: `dao/model/OrderEntity.kt`
+  - JPA repo: `dao/OrderJpaRepository.kt`
+  - JDBC repo: `dao/OrderJdbcRepository.kt`
+  - Blaze/QueryDSL config: `dao/BlazePersistenceConfig.kt`
+  - Custom JSONB functions: `dao/jpql/PgJsonb*.kt`
+- Local runner: `web-service-docker/local/`
+  - Entry: `LocalSpringDemoApplication.kt` (includes Testcontainers DB config)
+- Server runner: `web-service-docker/server/`
+  - Entry: `ServerSpringDemoApplication.kt`
 
 ## Run it
-Prerequisites: JDK 21
+Prerequisites: JDK 21+, Docker (for local dev runner)
 
-- Build: `./gradlew build`
-- Run app: `./gradlew bootRun`
+### Local Development (Auto-PostgreSQL)
+The easiest way to run the app is using the `local` module, which automatically starts a PostgreSQL container:
+```bash
+./gradlew :web-service-docker:local:bootRun
+```
+- **API**: `http://localhost:8080/api/v1/orders`
+- **Scalar UI (Docs)**: `http://localhost:8080/scalar/v1`
+- **WebSocket**: `ws://localhost:8080/ws/echo`
 
-Configuration is in `src/main/resources/application.yml`. The app expects PostgreSQL; tests will start their own database via Testcontainers.
+### Standard Build
+- Build all modules: `./gradlew build`
+- Run tests: `./gradlew test` (uses Testcontainers for integration tests)
 
-## Tests
-- Unit and integration tests: `./gradlew test`
-- Testcontainers spins up a PostgreSQL instance for integration tests.
+Configuration is in `web-service/src/main/resources/application.yml`.
 
 ## Dependency updates
 You can check for newer stable dependency versions using the Versions plugin:
@@ -69,7 +84,7 @@ You can check for newer stable dependency versions using the Versions plugin:
 
 ## Notes
 - QueryDSL Q-classes are generated by KSP during build; no special steps are required.
-- The project uses ktlint for formatting: `./gradlew ktlintCheck` / `ktlintFormat`.
+- The project uses ktlint for formatting: `./gradlew ktlintCheck` / `./gradlew ktlintFormat`.
 
 ## Disclaimer
 Portions of this repository were generated with assistance from Junie, an AI programming assistant by JetBrains. All AI-generated content was reviewed and integrated by a human maintainer.
