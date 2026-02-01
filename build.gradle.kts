@@ -16,17 +16,6 @@ allprojects {
 
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
-
-    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-        android.set(false)
-        outputToConsole.set(true)
-        ignoreFailures.set(false)
-        filter {
-            // Exclude generated code and QueryDSL Q-classes
-            exclude("**/build/**")
-            exclude("**/Q*.kt")
-        }
-    }
 }
 
 kotlin {
