@@ -2,10 +2,12 @@ package org.example.crypto.exchange
 
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.*
+import java.util.TreeSet
+import java.util.UUID
 
 enum class OrderSide {
-    BUY, SELL
+    BUY,
+    SELL,
 }
 
 data class Order(
@@ -15,7 +17,7 @@ data class Order(
     val price: BigDecimal,
     val quantity: BigDecimal,
     var remainingQuantity: BigDecimal = quantity,
-    val timestamp: Instant = Instant.now()
+    val timestamp: Instant = Instant.now(),
 ) {
     fun isFilled(): Boolean = remainingQuantity <= BigDecimal.ZERO
 }
@@ -25,35 +27,30 @@ data class Trade(
     val sellerId: String,
     val price: BigDecimal,
     val quantity: BigDecimal,
-    val timestamp: Instant = Instant.now()
+    val timestamp: Instant = Instant.now(),
 )
 
 class OrderBook {
     // Bids (BUYS): Highest price first. If same price, oldest first.
-    val bids = TreeSet<Order>(
-        compareByDescending<Order> { it.price }
-            .thenBy { it.timestamp }
-            .thenBy { it.id }
-    )
+    val bids =
+        TreeSet(
+            compareByDescending<Order> { it.price }
+                .thenBy { it.timestamp }
+                .thenBy { it.id },
+        )
 
     // Asks (SELLS): Lowest price first. If same price, oldest first.
-    val asks = TreeSet<Order>(
-        compareBy<Order> { it.price }
-            .thenBy { it.timestamp }
-            .thenBy { it.id }
-    )
+    val asks =
+        TreeSet(
+            compareBy<Order> { it.price }
+                .thenBy { it.timestamp }
+                .thenBy { it.id },
+        )
 
     fun addOrder(order: Order) {
         when (order.side) {
             OrderSide.BUY -> bids.add(order)
             OrderSide.SELL -> asks.add(order)
-        }
-    }
-
-    fun removeOrder(order: Order) {
-        when (order.side) {
-            OrderSide.BUY -> bids.remove(order)
-            OrderSide.SELL -> asks.remove(order)
         }
     }
 }

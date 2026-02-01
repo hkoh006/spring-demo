@@ -4,17 +4,19 @@ spring-boot = "4.0.2"
 spring-dependency-management = "1.1.7"
 ksp = "2.2.20-2.0.4"
 ktlint = "13.1.0"
-benmanes-versions = "0.53.0"
 blaze = "1.6.17"
 querydsl = "5.1.0"
 hypersistence = "3.15.1"
 querydsl-ksp = "7.0"
 testcontainers = "2.0.3"
 springdoc = "3.0.1"
+junit = "6.0.2"
 
 [libraries]
 # Spring BOM
 spring-boot-dependencies = { group = "org.springframework.boot", name = "spring-boot-dependencies", version.ref = "spring-boot" }
+spring-boot-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-boot-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
 spring-boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
 springdoc-openapi-starter-webmvc-scalar = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-scalar", version.ref = "springdoc" }
 
@@ -26,6 +28,11 @@ spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 postgresql = { module = "org.postgresql:postgresql" }
+
+# JUnit
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
 # Blaze-Persistence + QueryDSL
 blaze-core-api = { module = "com.blazebit:blaze-persistence-core-api-jakarta", version.ref = "blaze" }
@@ -61,8 +68,7 @@ blaze-querydsl = [
 ]
 
 testcontainers = [
-  "testcontainers-postgresql",
-#  "testcontainers-junit-jupiter"
+  "testcontainers-postgresql"
 ]
 
 [plugins]
@@ -73,4 +79,3 @@ spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
-benmanes-versions = { id = "com.github.ben-manes.versions", version.ref = "benmanes-versions" }

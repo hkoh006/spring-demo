@@ -20,19 +20,24 @@ class Exchange {
         return trades
     }
 
-    private fun matchBuyOrder(buyOrder: Order, trades: MutableList<Trade>) {
+    private fun matchBuyOrder(
+        buyOrder: Order,
+        trades: MutableList<Trade>,
+    ) {
         val iterator = orderBook.asks.iterator()
         while (iterator.hasNext() && !buyOrder.isFilled()) {
             val ask = iterator.next()
             if (buyOrder.price >= ask.price) {
                 val fillQuantity = buyOrder.remainingQuantity.min(ask.remainingQuantity)
-                
-                trades.add(Trade(
-                    buyerId = buyOrder.userId,
-                    sellerId = ask.userId,
-                    price = ask.price, // Execution price is the existing order's price
-                    quantity = fillQuantity
-                ))
+
+                trades.add(
+                    Trade(
+                        buyerId = buyOrder.userId,
+                        sellerId = ask.userId,
+                        price = ask.price, // Execution price is the existing order's price
+                        quantity = fillQuantity,
+                    ),
+                )
 
                 buyOrder.remainingQuantity -= fillQuantity
                 ask.remainingQuantity -= fillQuantity
@@ -46,19 +51,24 @@ class Exchange {
         }
     }
 
-    private fun matchSellOrder(sellOrder: Order, trades: MutableList<Trade>) {
+    private fun matchSellOrder(
+        sellOrder: Order,
+        trades: MutableList<Trade>,
+    ) {
         val iterator = orderBook.bids.iterator()
         while (iterator.hasNext() && !sellOrder.isFilled()) {
             val bid = iterator.next()
             if (sellOrder.price <= bid.price) {
                 val fillQuantity = sellOrder.remainingQuantity.min(bid.remainingQuantity)
 
-                trades.add(Trade(
-                    buyerId = bid.userId,
-                    sellerId = sellOrder.userId,
-                    price = bid.price, // Execution price is the existing order's price
-                    quantity = fillQuantity
-                ))
+                trades.add(
+                    Trade(
+                        buyerId = bid.userId,
+                        sellerId = sellOrder.userId,
+                        price = bid.price, // Execution price is the existing order's price
+                        quantity = fillQuantity,
+                    ),
+                )
 
                 sellOrder.remainingQuantity -= fillQuantity
                 bid.remainingQuantity -= fillQuantity

@@ -21,8 +21,8 @@ dependencies {
 
     testImplementation(libs.bundles.testcontainers)
     testImplementation(libs.spring.boot.testcontainers)
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testImplementation(libs.spring.boot.test)
+    testImplementation(libs.spring.boot.webmvc.test)
 
     testRuntimeOnly(libs.postgresql)
 }
