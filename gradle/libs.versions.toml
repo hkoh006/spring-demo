@@ -1,16 +1,16 @@
 [versions]
 kotlin = "2.2.20"
-spring-boot = "3.5.8"
+spring-boot = "4.0.2"
 spring-dependency-management = "1.1.7"
 ksp = "2.2.20-2.0.4"
 ktlint = "13.1.0"
 benmanes-versions = "0.53.0"
 blaze = "1.6.17"
 querydsl = "5.1.0"
-hypersistence = "3.11.0"
+hypersistence = "3.15.1"
 querydsl-ksp = "7.0"
 testcontainers = "1.21.3"
-springdoc = "2.8.14"
+springdoc = "3.0.1"
 
 [libraries]
 # Spring BOM
@@ -30,13 +30,13 @@ postgresql = { module = "org.postgresql:postgresql" }
 # Blaze-Persistence + QueryDSL
 blaze-core-api = { module = "com.blazebit:blaze-persistence-core-api-jakarta", version.ref = "blaze" }
 blaze-core-impl = { module = "com.blazebit:blaze-persistence-core-impl-jakarta", version.ref = "blaze" }
-blaze-hibernate62 = { module = "com.blazebit:blaze-persistence-integration-hibernate-6.2", version.ref = "blaze" }
+blaze-hibernate71 = { module = "com.blazebit:blaze-persistence-integration-hibernate-7.1", version.ref = "blaze" }
 blaze-querydsl-expr = { module = "com.blazebit:blaze-persistence-integration-querydsl-expressions-jakarta", version.ref = "blaze" }
 querydsl-jpa = { module = "com.querydsl:querydsl-jpa", version.ref = "querydsl" }
 querydsl-ksp-codegen = { module = "io.github.openfeign.querydsl:querydsl-ksp-codegen", version.ref = "querydsl-ksp" }
 
 # Hypersistence
-hypersistence-utils-hibernate63 = { module = "io.hypersistence:hypersistence-utils-hibernate-63", version.ref = "hypersistence" }
+hypersistence-utils-hibernate71 = { module = "io.hypersistence:hypersistence-utils-hibernate-71", version.ref = "hypersistence" }
 
 # Testing
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
@@ -60,7 +60,7 @@ spring-starters = [
 blaze-querydsl = [
   "blaze-core-api",
   "blaze-core-impl",
-  "blaze-hibernate62",
+  "blaze-hibernate71",
   "blaze-querydsl-expr"
 ]
 

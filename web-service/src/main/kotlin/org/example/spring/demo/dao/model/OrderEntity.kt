@@ -8,6 +8,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.Type
+import java.io.Serializable
 import java.math.BigDecimal
 
 @Table(name = "orders")
@@ -23,19 +24,19 @@ open class OrderEntity(
 data class OrderDetails(
     val allocations: List<Allocation>,
     val orderType: OrderType,
-)
+) : Serializable
 
 data class Allocation(
     val id: String,
     val quantity: Int,
-)
+) : Serializable
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = "type",
 )
-sealed interface OrderType
+sealed interface OrderType : Serializable
 
 @JsonTypeName("MARKET")
 class Market : OrderType

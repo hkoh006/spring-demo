@@ -34,7 +34,7 @@ dependencies {
     implementation(libs.spring.boot.testcontainers)
 
     // Hypersistence utilities
-    implementation(libs.hypersistence.utils.hibernate63)
+    implementation(libs.hypersistence.utils.hibernate71)
 
     // Blaze-Persistence + QueryDSL (Jakarta)
     implementation(libs.bundles.blaze.querydsl)
@@ -49,6 +49,7 @@ dependencies {
     testImplementation(libs.bundles.testing.core)
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.bundles.testcontainers)
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 
     // OpenAPI + Scalar UI (via springdoc)
     implementation(libs.springdoc.openapi.starter.webmvc.scalar)
