@@ -9,7 +9,7 @@ blaze = "1.6.17"
 querydsl = "5.1.0"
 hypersistence = "3.15.1"
 querydsl-ksp = "7.0"
-testcontainers = "1.21.3"
+testcontainers = "2.0.3"
 springdoc = "3.0.1"
 
 [libraries]
@@ -38,12 +38,8 @@ querydsl-ksp-codegen = { module = "io.github.openfeign.querydsl:querydsl-ksp-cod
 # Hypersistence
 hypersistence-utils-hibernate71 = { module = "io.hypersistence:hypersistence-utils-hibernate-71", version.ref = "hypersistence" }
 
-# Testing
-spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
-junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
-
-testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
-testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
+#testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 
 [bundles]
 # Spring starter bundle (commonly used web + JPA + base + Kotlin integration)
@@ -64,15 +60,9 @@ blaze-querydsl = [
   "blaze-querydsl-expr"
 ]
 
-# Test bundles
-testing-core = [
-  "spring-boot-starter-test",
-  "junit-platform-launcher"
-]
-
 testcontainers = [
   "testcontainers-postgresql",
-  "testcontainers-junit-jupiter"
+#  "testcontainers-junit-jupiter"
 ]
 
 [plugins]

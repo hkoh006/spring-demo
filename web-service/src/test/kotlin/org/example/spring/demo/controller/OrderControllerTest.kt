@@ -1,6 +1,6 @@
 package org.example.spring.demo.controller
 
-import org.example.spring.demo.config.TestcontainersDatabaseConfig
+import org.example.spring.demo.TestcontainersDatabaseConfig
 import org.example.spring.demo.dao.OrderJpaRepository
 import org.example.spring.demo.dao.model.Allocation
 import org.example.spring.demo.dao.model.Market
@@ -15,10 +15,10 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.client.RestTestClient
 
+@Import(TestcontainersDatabaseConfig::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient
 class OrderControllerTest {
-
     @Autowired
     lateinit var client: RestTestClient
 
@@ -30,67 +30,83 @@ class OrderControllerTest {
         orderJpaRepository.deleteAll()
     }
 
-    private fun createOrderEntity(id: Long) = OrderEntity(
-        id = id,
-        orderDetails = OrderDetails(
-            allocations = listOf(Allocation("a1", 10)),
-            orderType = Market()
+    private fun createOrderEntity(id: Long) =
+        OrderEntity(
+            id = id,
+            orderDetails =
+                OrderDetails(
+                    allocations = listOf(Allocation("a1", 10)),
+                    orderType = Market(),
+                ),
         )
-    )
 
     @Test
     fun `getById should return order when exists`() {
         val order = createOrderEntity(1L)
         orderJpaRepository.save(order)
 
-        client.get()
+        client
+            .get()
             .uri("/api/v1/orders/1")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus()
+            .isOk
             .expectBody()
-            .jsonPath("$.id").isEqualTo(1)
-            .jsonPath("$.orderDetails.allocations[0].id").isEqualTo("a1")
+            .jsonPath("$.id")
+            .isEqualTo(1)
+            .jsonPath("$.orderDetails.allocations[0].id")
+            .isEqualTo("a1")
     }
 
     @Test
     fun `getById should return 404 when not exists`() {
-        client.get()
+        client
+            .get()
             .uri("/api/v1/orders/999")
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus()
+            .isNotFound
     }
 
     @Test
     fun `create should save and return 201 when order is valid`() {
         val order = createOrderEntity(1L)
 
-        client.post()
+        client
+            .post()
             .uri("/api/v1/orders")
             .contentType(MediaType.APPLICATION_JSON)
             .body(order)
             .exchange()
-            .expectStatus().isCreated
-            .expectHeader().exists("Location")
-            .expectHeader().valueMatches("Location", ".*/api/v1/orders/1$")
+            .expectStatus()
+            .isCreated
+            .expectHeader()
+            .exists("Location")
+            .expectHeader()
+            .valueMatches("Location", ".*/api/v1/orders/1$")
             .expectBody()
-            .jsonPath("$.id").isEqualTo(1)
+            .jsonPath("$.id")
+            .isEqualTo(1)
 
         assert(orderJpaRepository.existsById(1L))
     }
 
     @Test
     fun `create should return 400 when id is missing`() {
-        val order = OrderEntity(
-            id = null,
-            orderDetails = OrderDetails(listOf(), Market())
-        )
+        val order =
+            OrderEntity(
+                id = null,
+                orderDetails = OrderDetails(listOf(), Market()),
+            )
 
-        client.post()
+        client
+            .post()
             .uri("/api/v1/orders")
             .contentType(MediaType.APPLICATION_JSON)
             .body(order)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
@@ -98,12 +114,14 @@ class OrderControllerTest {
         val order = createOrderEntity(1L)
         orderJpaRepository.save(order)
 
-        client.post()
+        client
+            .post()
             .uri("/api/v1/orders")
             .contentType(MediaType.APPLICATION_JSON)
             .body(order)
             .exchange()
-            .expectStatus().isEqualTo(409)
+            .expectStatus()
+            .isEqualTo(409)
     }
 
     @Test
@@ -111,35 +129,43 @@ class OrderControllerTest {
         val order = createOrderEntity(1L)
         orderJpaRepository.save(order)
 
-        val updatedOrder = OrderEntity(
-            id = 1L,
-            orderDetails = OrderDetails(
-                allocations = listOf(Allocation("a2", 20)),
-                orderType = Market()
+        val updatedOrder =
+            OrderEntity(
+                id = 1L,
+                orderDetails =
+                    OrderDetails(
+                        allocations = listOf(Allocation("a2", 20)),
+                        orderType = Market(),
+                    ),
             )
-        )
 
-        client.put()
+        client
+            .put()
             .uri("/api/v1/orders/1")
             .contentType(MediaType.APPLICATION_JSON)
             .body(updatedOrder)
             .exchange()
-            .expectStatus().isOk
+            .expectStatus()
+            .isOk
             .expectBody()
-            .jsonPath("$.orderDetails.allocations[0].id").isEqualTo("a2")
-            .jsonPath("$.orderDetails.allocations[0].quantity").isEqualTo(20)
+            .jsonPath("$.orderDetails.allocations[0].id")
+            .isEqualTo("a2")
+            .jsonPath("$.orderDetails.allocations[0].quantity")
+            .isEqualTo(20)
     }
 
     @Test
     fun `update should return 404 when order does not exist`() {
         val order = createOrderEntity(1L)
 
-        client.put()
+        client
+            .put()
             .uri("/api/v1/orders/1")
             .contentType(MediaType.APPLICATION_JSON)
             .body(order)
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus()
+            .isNotFound
     }
 
     @Test
@@ -147,19 +173,23 @@ class OrderControllerTest {
         val order = createOrderEntity(1L)
         orderJpaRepository.save(order)
 
-        client.delete()
+        client
+            .delete()
             .uri("/api/v1/orders/1")
             .exchange()
-            .expectStatus().isNoContent
+            .expectStatus()
+            .isNoContent
 
         assert(!orderJpaRepository.existsById(1L))
     }
 
     @Test
     fun `delete should return 404 when order does not exist`() {
-        client.delete()
+        client
+            .delete()
             .uri("/api/v1/orders/1")
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus()
+            .isNotFound
     }
 }
