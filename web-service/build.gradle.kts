@@ -24,7 +24,6 @@ dependencies {
     testImplementation(libs.spring.boot.test)
     testImplementation(libs.spring.boot.webmvc.test)
 
-    testRuntimeOnly(libs.postgresql)
 }
 
 tasks.withType<Test> {

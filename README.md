@@ -4,8 +4,9 @@ A multi-module Spring Boot 4 (Kotlin) project that demonstrates:
 - Type-safe querying with QueryDSL (Jakarta) backed by KSP code generation
 - Blaze-Persistence integration for advanced JPA criteria queries on Hibernate 7
 - PostgreSQL JSONB helpers exposed to JPA/Blaze (custom functions)
-- Multi-module Gradle setup with specialized runners (local dev vs. server)
+- Multi-module Gradle setup with specialized runners (local dev vs. server vs. docker-compose)
 - Local development with Testcontainers (auto-provisioned PostgreSQL)
+- Docker Compose setup for PostgreSQL 17 and server runner
 - Scalar UI for interactive API documentation
 - WebSocket echo service
 - Practical Gradle Version Catalog usage with dependency bundles
@@ -64,10 +65,46 @@ Key Gradle bits:
 Prerequisites: JDK 21+, Docker (for local dev runner)
 
 ### Local Development (Auto-PostgreSQL)
-The easiest way to run the app is using the `local` module, which automatically starts a PostgreSQL container:
+The easiest way to run the app is using the `local` module, which automatically starts a PostgreSQL container using Testcontainers:
 ```bash
 ./gradlew :web-service-docker:local:bootRun
 ```
+
+### Docker Compose (Manual PostgreSQL)
+If you prefer to run PostgreSQL manually or want to run the server-like setup, use the provided `docker-compose.yml`:
+
+1. **Start the database**:
+   ```bash
+   docker-compose up -d
+   ```
+   This starts PostgreSQL 17 with database `spring_demo`, user `user`, and password `password`. It includes a health check to ensure the DB is ready.
+
+2. **Run the application**:
+   You can now run the standard `web-service` or the `server` module:
+   ```bash
+   ./gradlew :web-service:bootRun
+   ```
+   or
+   ```bash
+   ./gradlew :web-service-docker:server:bootRun
+   ```
+
+**Note**: If you previously had a different database configuration, you might need to recreate the volume:
+```bash
+docker-compose down -v
+docker-compose up -d
+```
+
+### Running with Docker Compose (App + DB)
+You can also run both the server and the database together:
+```bash
+# Build the server image first (ensure you have a task or setup to build 'server:0.0.1-SNAPSHOT')
+docker-compose up -d
+```
+The `server` container will wait for the `postgres` container to be healthy before starting.
+
+### API Endpoints
+Once running, you can access:
 - **API**: `http://localhost:8080/api/v1/orders`
 - **Scalar UI (Docs)**: `http://localhost:8080/scalar/v1`
 - **WebSocket**: `ws://localhost:8080/ws/echo`

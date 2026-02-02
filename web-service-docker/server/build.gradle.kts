@@ -9,6 +9,7 @@ dependencies {
     implementation(platform(libs.spring.boot.dependencies))
 
     implementation(libs.bundles.spring.starters)
+    implementation(libs.postgresql)
 
     implementation(project(":web-service"))
 }

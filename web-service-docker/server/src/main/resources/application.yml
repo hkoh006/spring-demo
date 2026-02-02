@@ -1,14 +1,14 @@
 spring:
   application:
-    name: spring-demo
+    name: web-service
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     properties:
       hibernate:
         format_sql: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/spring_demo
+    url: jdbc:postgresql://postgres:5432/spring_demo
     username: user
     password: password
     driver-class-name: org.postgresql.Driver
