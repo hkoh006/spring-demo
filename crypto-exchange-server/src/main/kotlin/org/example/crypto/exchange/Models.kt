@@ -30,6 +30,13 @@ data class Trade(
     val timestamp: Instant = Instant.now(),
 )
 
+data class OrderEvent(
+    val userId: String,
+    val side: OrderSide,
+    val price: BigDecimal,
+    val quantity: BigDecimal,
+)
+
 class OrderBook {
     // Bids (BUYS): Highest price first. If same price, oldest first.
     val bids =

@@ -9,6 +9,7 @@ dependencies {
     implementation(platform(libs.spring.boot.dependencies))
     implementation(libs.spring.boot.testcontainers)
     implementation(libs.testcontainers.postgresql)
+    implementation(libs.testcontainers.junit.jupiter)
 
     implementation(project(":web-service"))
 

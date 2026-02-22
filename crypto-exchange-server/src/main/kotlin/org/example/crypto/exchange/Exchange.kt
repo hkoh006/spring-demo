@@ -1,5 +1,8 @@
 package org.example.crypto.exchange
 
+import org.springframework.stereotype.Service
+
+@Service
 class Exchange {
     private val orderBook = OrderBook()
 

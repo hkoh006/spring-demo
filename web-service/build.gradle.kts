@@ -20,6 +20,7 @@ dependencies {
     ksp(libs.querydsl.ksp.codegen)
 
     testImplementation(libs.bundles.testcontainers)
+    testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.spring.boot.testcontainers)
     testImplementation(libs.spring.boot.test)
     testImplementation(libs.spring.boot.webmvc.test)
