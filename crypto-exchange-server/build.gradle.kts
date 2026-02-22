@@ -7,14 +7,6 @@ plugins {
 
 description = "crypto-exchange-server"
 
-tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    enabled = false
-}
-
-tasks.getByName<Jar>("jar") {
-    enabled = true
-}
-
 dependencies {
     implementation(libs.kotlin.reflect)
     implementation(libs.spring.boot.starter)
