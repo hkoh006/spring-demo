@@ -6,11 +6,13 @@ import org.example.crypto.exchange.Exchange
 import org.example.crypto.exchange.Order
 import org.example.crypto.exchange.OrderSide
 import org.example.crypto.exchange.TestApplication
+import org.example.crypto.exchange.TestcontainersPostgresConfig
 import org.example.crypto.exchange.messaging.proto.OrderEventProto
 import org.example.crypto.exchange.messaging.proto.OrderSideProto
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.kafka.core.KafkaTemplate
 import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
@@ -18,6 +20,7 @@ import java.util.concurrent.TimeUnit
 @SpringBootTest(
     classes = [TestApplication::class],
     properties = [
+        "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.kafka.consumer.auto-offset-reset=earliest",
         "spring.kafka.consumer.key-deserializer=org.apache.kafka.common.serialization.StringDeserializer",
         "spring.kafka.consumer.value-deserializer=io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializer",
@@ -30,6 +33,7 @@ import java.util.concurrent.TimeUnit
         "spring.kafka.producer.properties.auto.register.schemas=true",
     ],
 )
+@Import(TestcontainersPostgresConfig::class)
 class OrderSubscriberTest {
     @Autowired
     private lateinit var kafkaTemplate: KafkaTemplate<String, Any>

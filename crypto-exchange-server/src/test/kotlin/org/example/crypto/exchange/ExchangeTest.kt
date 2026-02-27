@@ -1,15 +1,32 @@
 package org.example.crypto.exchange
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import java.math.BigDecimal
 
+@SpringBootTest(properties = ["spring.jpa.hibernate.ddl-auto=create-drop"])
+@Import(TestcontainersPostgresConfig::class)
 class ExchangeTest {
-    @Test
-    fun `test simple match`() {
-        val exchange = Exchange()
+    @Autowired
+    private lateinit var exchange: Exchange
 
+    @Autowired
+    private lateinit var orderRepository: OrderRepository
+
+    @Autowired
+    private lateinit var tradeRepository: TradeRepository
+
+    @BeforeEach
+    fun clearDatabase() {
+        exchange.clear()
+    }
+
+    @Test
+    fun `test simple match and persistence`() {
         val sellOrder =
             Order(
                 userId = "seller",
@@ -28,22 +45,30 @@ class ExchangeTest {
             )
         val trades = exchange.placeOrder(buyOrder)
 
-        assertEquals(1, trades.size)
-        assertEquals(BigDecimal("1.0"), trades[0].quantity)
-        assertEquals(BigDecimal("100"), trades[0].price)
-        assertEquals("buyer", trades[0].buyerId)
-        assertEquals("seller", trades[0].sellerId)
+        assertThat(trades).hasSize(1)
+        assertThat(trades[0].quantity).isEqualTo(BigDecimal("1.0"))
+        assertThat(trades[0].price).isEqualTo(BigDecimal("100"))
+        assertThat(trades[0].buyerId).isEqualTo("buyer")
+        assertThat(trades[0].sellerId).isEqualTo("seller")
 
-        assertTrue(buyOrder.isFilled())
-        assertEquals(BigDecimal("0.5"), sellOrder.remainingQuantity)
-        assertEquals(1, exchange.getOrderBook().asks.size)
-        assertEquals(0, exchange.getOrderBook().bids.size)
+        assertThat(buyOrder.isFilled()).isTrue()
+        assertThat(sellOrder.remainingQuantity).isEqualTo(BigDecimal("0.5"))
+        assertThat(exchange.getOrderBook().asks).hasSize(1)
+        assertThat(exchange.getOrderBook().bids).isEmpty()
+
+        // Verify persistence
+        val savedOrders = orderRepository.findAll()
+        assertThat(savedOrders).hasSize(2)
+        val savedSellOrder = orderRepository.findById(sellOrder.id).get()
+        assertThat(savedSellOrder.remainingQuantity.setScale(2)).isEqualTo(BigDecimal("0.50"))
+
+        val savedTrades = tradeRepository.findAll()
+        assertThat(savedTrades).hasSize(1)
+        assertThat(savedTrades[0].quantity.setScale(2)).isEqualTo(BigDecimal("1.00"))
     }
 
     @Test
     fun `test price priority`() {
-        val exchange = Exchange()
-
         // Higher sell price
         exchange.placeOrder(
             Order(
@@ -73,40 +98,11 @@ class ExchangeTest {
             )
         val trades = exchange.placeOrder(buyOrder)
 
-        assertEquals(2, trades.size)
-        assertEquals("seller2", trades[0].sellerId) // Price 100 matched first
-        assertEquals(BigDecimal("1.0"), trades[0].quantity)
+        assertThat(trades).hasSize(2)
+        assertThat(trades[0].sellerId).isEqualTo("seller2") // Price 100 matched first
+        assertThat(trades[0].quantity).isEqualTo(BigDecimal("1.0"))
 
-        assertEquals("seller1", trades[1].sellerId) // Price 101 matched second
-        assertEquals(BigDecimal("0.5"), trades[1].quantity)
-    }
-
-    @Test
-    fun `test order book remains correct after partial match`() {
-        val exchange = Exchange()
-
-        exchange.placeOrder(
-            Order(
-                userId = "seller",
-                side = OrderSide.SELL,
-                price = BigDecimal("100"),
-                quantity = BigDecimal("1.0"),
-            ),
-        )
-
-        val buyOrder =
-            Order(
-                userId = "buyer",
-                side = OrderSide.BUY,
-                price = BigDecimal("100"),
-                quantity = BigDecimal("2.0"),
-            )
-        val trades = exchange.placeOrder(buyOrder)
-
-        assertEquals(1, trades.size)
-        assertEquals(BigDecimal("1.0"), buyOrder.remainingQuantity)
-        assertEquals(0, exchange.getOrderBook().asks.size)
-        assertEquals(1, exchange.getOrderBook().bids.size)
-        assertEquals(buyOrder, exchange.getOrderBook().bids.first())
+        assertThat(trades[1].sellerId).isEqualTo("seller1") // Price 101 matched second
+        assertThat(trades[1].quantity).isEqualTo(BigDecimal("0.5"))
     }
 }

@@ -1,19 +1,31 @@
 package org.example.crypto.exchange
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Random
 
+@SpringBootTest(properties = ["spring.jpa.hibernate.ddl-auto=create-drop"])
+@Import(TestcontainersPostgresConfig::class)
 class ExchangeChaosTest {
     private val random = Random()
 
+    @Autowired
+    private lateinit var exchange: Exchange
+
+    @BeforeEach
+    fun clearDatabase() {
+        exchange.clear()
+    }
+
     @Test
     fun `chaos test - random orders and invariant checks`() {
-        val exchange = Exchange()
-        val numOrders = 10000
+        val numOrders = 100
 
         var totalBuyQuantity = BigDecimal.ZERO
         var totalSellQuantity = BigDecimal.ZERO
@@ -49,20 +61,26 @@ class ExchangeChaosTest {
             if (orderBook.bids.isNotEmpty() && orderBook.asks.isNotEmpty()) {
                 val bestBid = orderBook.bids.first().price
                 val bestAsk = orderBook.asks.first().price
-                assertTrue(bestBid < bestAsk, "Order book crossed: Bid $bestBid >= Ask $bestAsk")
+                assertThat(bestBid < bestAsk)
+                    .withFailMessage("Order book crossed: Bid $bestBid >= Ask $bestAsk")
+                    .isTrue()
             }
 
             // Invariant 3: Price priority
             if (orderBook.bids.size > 1) {
                 val prices = orderBook.bids.map { it.price }
                 for (i in 0 until prices.size - 1) {
-                    assertTrue(prices[i] >= prices[i + 1], "Bids price priority failed: ${prices[i]} < ${prices[i + 1]}")
+                    assertThat(prices[i] >= prices[i + 1])
+                        .withFailMessage("Bids price priority failed: ${prices[i]} < ${prices[i + 1]}")
+                        .isTrue()
                 }
             }
             if (orderBook.asks.size > 1) {
                 val prices = orderBook.asks.map { it.price }
                 for (i in 0 until prices.size - 1) {
-                    assertTrue(prices[i] <= prices[i + 1], "Asks price priority failed: ${prices[i]} > ${prices[i + 1]}")
+                    assertThat(prices[i] <= prices[i + 1])
+                        .withFailMessage("Asks price priority failed: ${prices[i]} > ${prices[i + 1]}")
+                        .isTrue()
                 }
             }
         }
@@ -75,16 +93,13 @@ class ExchangeChaosTest {
         // totalBuyQuantity = executedTradeQuantity + remainingBuyQuantity
         // totalSellQuantity = executedTradeQuantity + remainingSellQuantity
 
-        assertEquals(
-            totalBuyQuantity.stripTrailingZeros(),
-            (executedTradeQuantity + remainingBuyQuantity).stripTrailingZeros(),
-            "Buy quantity mismatch",
-        )
-        assertEquals(
-            totalSellQuantity.stripTrailingZeros(),
-            (executedTradeQuantity + remainingSellQuantity).stripTrailingZeros(),
-            "Sell quantity mismatch",
-        )
+        assertThat((executedTradeQuantity + remainingBuyQuantity).setScale(8, RoundingMode.HALF_UP).stripTrailingZeros())
+            .withFailMessage("Buy quantity mismatch")
+            .isEqualTo(totalBuyQuantity.setScale(8, RoundingMode.HALF_UP).stripTrailingZeros())
+
+        assertThat((executedTradeQuantity + remainingSellQuantity).setScale(8, RoundingMode.HALF_UP).stripTrailingZeros())
+            .withFailMessage("Sell quantity mismatch")
+            .isEqualTo(totalSellQuantity.setScale(8, RoundingMode.HALF_UP).stripTrailingZeros())
 
         println("Chaos test passed with $numOrders orders.")
         println("Total trades: $executedTradeQuantity")

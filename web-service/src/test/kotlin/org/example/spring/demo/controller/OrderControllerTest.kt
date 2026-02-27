@@ -1,5 +1,6 @@
 package org.example.spring.demo.controller
 
+import org.assertj.core.api.Assertions.assertThat
 import org.example.spring.demo.TestcontainersDatabaseConfig
 import org.example.spring.demo.dao.OrderJpaRepository
 import org.example.spring.demo.dao.model.Allocation
@@ -88,7 +89,7 @@ class OrderControllerTest {
             .jsonPath("$.id")
             .isEqualTo(1)
 
-        assert(orderJpaRepository.existsById(1L))
+        assertThat(orderJpaRepository.existsById(1L)).isTrue()
     }
 
     @Test
@@ -180,7 +181,7 @@ class OrderControllerTest {
             .expectStatus()
             .isNoContent
 
-        assert(!orderJpaRepository.existsById(1L))
+        assertThat(orderJpaRepository.existsById(1L)).isFalse()
     }
 
     @Test

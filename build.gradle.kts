@@ -21,7 +21,7 @@ subprojects {
     configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
         filter {
             exclude { element ->
-                element.file.path.contains("/generated/")
+                element.file.path.contains("generated/")
             }
         }
     }
