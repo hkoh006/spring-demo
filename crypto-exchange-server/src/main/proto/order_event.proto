@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package org.example.crypto.exchange.messaging;
+
+option java_multiple_files = true;
+option java_package = "org.example.crypto.exchange.messaging.proto";
+option java_outer_classname = "OrderEventProtos";
+
+enum OrderSideProto {
+  BUY = 0;
+  SELL = 1;
+}
+
+message OrderEventProto {
+  string user_id = 1;
+  OrderSideProto side = 2;
+  string price = 3;
+  string quantity = 4;
+}

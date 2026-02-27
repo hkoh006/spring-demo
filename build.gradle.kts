@@ -11,11 +11,20 @@ allprojects {
 
     repositories {
         mavenCentral()
+        maven { url = uri("https://packages.confluent.io/maven/") }
     }
 }
 
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
+    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        filter {
+            exclude { element ->
+                element.file.path.contains("/generated/")
+            }
+        }
+    }
 }
 
 kotlin {
