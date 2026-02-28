@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
     alias(libs.plugins.protobuf)
+    id("org.openapi.generator") version "7.20.0"
 }
 
 description = "crypto-exchange-server"
@@ -60,4 +61,40 @@ tasks.bootJar {
 
 tasks.jar {
     enabled = true
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+sourceSets {
+    main {
+        kotlin {
+            srcDir(tasks.openApiGenerate.map { it.outputDir.get() + "/src/main/kotlin" })
+            exclude("org/openapitools/client/**")
+        }
+    }
+}
+
+openApiValidate {
+    inputSpec.set(layout.projectDirectory.file("src/main/resources/crypto-exchange-openapi.yaml").asFile.absolutePath)
+}
+
+openApiGenerate {
+    generatorName.set("kotlin-spring")
+    inputSpec.set(layout.projectDirectory.file("src/main/resources/crypto-exchange-openapi.yaml").asFile.absolutePath)
+    outputDir.set(layout.buildDirectory.dir("generated/openapi").map { it.asFile.absolutePath })
+    apiPackage.set("org.example.crypto.exchange.api")
+    modelPackage.set("org.example.crypto.exchange.model")
+    configOptions.set(
+        mapOf(
+            "enumPropertyNaming" to "UPPERCASE",
+            "serializationLibrary" to "jackson",
+            "collectionType" to "list",
+            "interfaceOnly" to "true",
+            "useSpringBoot3" to "true",
+            "useTags" to "true",
+            "documentationProvider" to "none",
+        ),
+    )
 }
