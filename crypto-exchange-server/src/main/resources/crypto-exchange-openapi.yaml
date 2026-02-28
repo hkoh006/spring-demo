@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-- url: http://localhost:63948
+- url: http://localhost:64798
   description: Generated server url
 paths:
   /api/trades:
@@ -15,11 +15,11 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            'application/json':
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TradeEntity"
+                  $ref: "#/components/schemas/TradeDto"
   /api/trades/{id}:
     get:
       tags:
@@ -35,9 +35,9 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            'application/json':
               schema:
-                $ref: "#/components/schemas/TradeEntity"
+                $ref: "#/components/schemas/TradeDto"
   /api/orders:
     get:
       tags:
@@ -47,11 +47,11 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            'application/json':
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/OrderEntity"
+                  $ref: "#/components/schemas/OrderDto"
   /api/orders/{id}:
     get:
       tags:
@@ -67,12 +67,12 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            'application/json':
               schema:
-                $ref: "#/components/schemas/OrderEntity"
+                $ref: "#/components/schemas/OrderDto"
 components:
   schemas:
-    TradeEntity:
+    TradeDto:
       type: object
       properties:
         id:
@@ -95,7 +95,7 @@ components:
       - quantity
       - sellerId
       - timestamp
-    OrderEntity:
+    OrderDto:
       type: object
       properties:
         id:

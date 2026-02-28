@@ -2,6 +2,7 @@ package org.example.crypto.exchange.controller
 
 import org.example.crypto.exchange.TradeRepository
 import org.example.crypto.exchange.api.TradeEndpointApi
+import org.example.crypto.exchange.model.TradeDto
 import org.example.crypto.exchange.model.TradeEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
@@ -12,10 +13,10 @@ import kotlin.jvm.optionals.getOrNull
 class TradeEndpoint(
     private val tradeRepository: TradeRepository,
 ) : TradeEndpointApi {
-    override fun getAllTrades(): ResponseEntity<List<TradeEntity>> =
+    override fun getAllTrades(): ResponseEntity<List<TradeDto>> =
         ResponseEntity.ok(
             tradeRepository.findAll().map {
-                TradeEntity(
+                TradeDto(
                     id = it.id,
                     buyerId = it.buyerId,
                     sellerId = it.sellerId,
@@ -26,13 +27,13 @@ class TradeEndpoint(
             },
         )
 
-    override fun getTradeById(id: String): ResponseEntity<TradeEntity> =
+    override fun getTradeById(id: String): ResponseEntity<TradeDto> =
         tradeRepository
             .findById(id)
             .getOrNull()
             ?.let {
                 ResponseEntity.ok(
-                    TradeEntity(
+                    TradeDto(
                         id = it.id,
                         buyerId = it.buyerId,
                         sellerId = it.sellerId,

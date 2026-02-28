@@ -2,6 +2,7 @@ package org.example.crypto.exchange.controller
 
 import org.example.crypto.exchange.OrderRepository
 import org.example.crypto.exchange.api.OrderEndpointApi
+import org.example.crypto.exchange.model.OrderDto
 import org.example.crypto.exchange.model.OrderEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
@@ -12,13 +13,13 @@ import kotlin.jvm.optionals.getOrNull
 class OrderEndpoint(
     private val orderRepository: OrderRepository,
 ) : OrderEndpointApi {
-    override fun getAllOrders(): ResponseEntity<List<OrderEntity>> =
+    override fun getAllOrders(): ResponseEntity<List<OrderDto>> =
         ResponseEntity.ok(
             orderRepository.findAll().map {
-                OrderEntity(
+                OrderDto(
                     id = it.id,
                     userId = it.userId,
-                    side = OrderEntity.Side.valueOf(it.side.name),
+                    side = OrderDto.Side.valueOf(it.side.name),
                     price = it.price,
                     quantity = it.quantity,
                     remainingQuantity = it.remainingQuantity,
@@ -28,16 +29,16 @@ class OrderEndpoint(
             },
         )
 
-    override fun getOrderById(id: String): ResponseEntity<OrderEntity> =
+    override fun getOrderById(id: String): ResponseEntity<OrderDto> =
         orderRepository
             .findById(id)
             .getOrNull()
             ?.let {
                 ResponseEntity.ok(
-                    OrderEntity(
+                    OrderDto(
                         id = it.id,
                         userId = it.userId,
-                        side = OrderEntity.Side.valueOf(it.side.name),
+                        side = OrderDto.Side.valueOf(it.side.name),
                         price = it.price,
                         quantity = it.quantity,
                         remainingQuantity = it.remainingQuantity,
