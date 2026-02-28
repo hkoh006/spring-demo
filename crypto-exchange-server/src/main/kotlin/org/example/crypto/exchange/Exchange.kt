@@ -24,8 +24,8 @@ class Exchange(
 
     @Transactional
     @Synchronized
-    fun placeOrder(order: Order): List<Trade> {
-        val trades = mutableListOf<Trade>()
+    fun placeOrder(order: OrderEntity): List<TradeEntity> {
+        val trades = mutableListOf<TradeEntity>()
 
         // Persist the new order first
         orderRepository.save(order)
@@ -50,8 +50,8 @@ class Exchange(
     }
 
     private fun matchBuyOrder(
-        buyOrder: Order,
-        trades: MutableList<Trade>,
+        buyOrder: OrderEntity,
+        trades: MutableList<TradeEntity>,
     ) {
         val iterator = orderBook.asks.iterator()
         while (iterator.hasNext() && !buyOrder.isFilled()) {
@@ -60,7 +60,7 @@ class Exchange(
                 val fillQuantity = buyOrder.remainingQuantity.min(ask.remainingQuantity)
 
                 trades.add(
-                    Trade(
+                    TradeEntity(
                         buyerId = buyOrder.userId,
                         sellerId = ask.userId,
                         price = ask.price, // Execution price is the existing order's price
@@ -86,8 +86,8 @@ class Exchange(
     }
 
     private fun matchSellOrder(
-        sellOrder: Order,
-        trades: MutableList<Trade>,
+        sellOrder: OrderEntity,
+        trades: MutableList<TradeEntity>,
     ) {
         val iterator = orderBook.bids.iterator()
         while (iterator.hasNext() && !sellOrder.isFilled()) {
@@ -96,7 +96,7 @@ class Exchange(
                 val fillQuantity = sellOrder.remainingQuantity.min(bid.remainingQuantity)
 
                 trades.add(
-                    Trade(
+                    TradeEntity(
                         buyerId = bid.userId,
                         sellerId = sellOrder.userId,
                         price = bid.price, // Execution price is the existing order's price

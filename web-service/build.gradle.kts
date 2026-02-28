@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.bundles.spring.starters)
 
     implementation(libs.hypersistence.utils.hibernate71)
+    implementation(libs.springdoc.openapi.starter.webmvc.scalar)
     implementation(libs.bundles.blaze.querydsl)
     implementation(variantOf(libs.querydsl.jpa) { classifier("jakarta") })
     ksp(libs.querydsl.ksp.codegen)

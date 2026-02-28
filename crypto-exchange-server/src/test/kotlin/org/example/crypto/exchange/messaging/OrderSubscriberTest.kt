@@ -3,9 +3,8 @@ package org.example.crypto.exchange.messaging
 import org.assertj.core.api.Assertions
 import org.awaitility.Awaitility.await
 import org.example.crypto.exchange.Exchange
-import org.example.crypto.exchange.Order
+import org.example.crypto.exchange.OrderEntity
 import org.example.crypto.exchange.OrderSide
-import org.example.crypto.exchange.TestApplication
 import org.example.crypto.exchange.TestcontainersPostgresConfig
 import org.example.crypto.exchange.messaging.proto.OrderEventProto
 import org.example.crypto.exchange.messaging.proto.OrderSideProto
@@ -18,7 +17,6 @@ import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 
 @SpringBootTest(
-    classes = [TestApplication::class],
     properties = [
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.kafka.consumer.auto-offset-reset=earliest",
@@ -65,9 +63,9 @@ class OrderSubscriberTest {
             Assertions
                 .assertThat(bids.first())
                 .usingRecursiveComparison()
-                .ignoringFields(Order::id.name, Order::timestamp.name)
+                .ignoringFields(OrderEntity::id.name, OrderEntity::timestamp.name)
                 .isEqualTo(
-                    Order(
+                    OrderEntity(
                         id = "IGNORED",
                         userId = "user-123",
                         side = OrderSide.BUY,

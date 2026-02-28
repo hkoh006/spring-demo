@@ -1,7 +1,7 @@
 package org.example.crypto.exchange.messaging
 
 import org.example.crypto.exchange.Exchange
-import org.example.crypto.exchange.Order
+import org.example.crypto.exchange.OrderEntity
 import org.example.crypto.exchange.OrderSide
 import org.example.crypto.exchange.messaging.proto.OrderEventProto
 import org.example.crypto.exchange.messaging.proto.OrderSideProto
@@ -19,7 +19,7 @@ class OrderSubscriber(
     )
     fun consume(event: OrderEventProto) {
         val order =
-            Order(
+            OrderEntity(
                 userId = event.userId,
                 side =
                     when (event.side) {

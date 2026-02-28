@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.client.RestTestClient
+import java.io.File
 
 @Import(TestcontainersDatabaseConfig::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -192,5 +193,23 @@ class OrderControllerTest {
             .exchange()
             .expectStatus()
             .isNotFound
+    }
+
+    @Test
+    fun `generate openapi spec`() {
+        val result =
+            client
+                .get()
+                .uri("/v3/api-docs.yaml")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody(String::class.java)
+                .returnResult()
+                .responseBody
+
+        val file = File("src/main/resources/web-service-openapi.yaml")
+        file.parentFile.mkdirs()
+        file.writeText(result!!)
     }
 }

@@ -17,7 +17,7 @@ enum class OrderSide {
 
 @Entity
 @Table(name = "orders")
-data class Order(
+data class OrderEntity(
     @Id
     val id: String = UUID.randomUUID().toString(),
     val userId: String,
@@ -36,7 +36,7 @@ data class Order(
 
 @Entity
 @Table(name = "trades")
-data class Trade(
+data class TradeEntity(
     @Id
     val id: String = UUID.randomUUID().toString(),
     val buyerId: String,
@@ -49,30 +49,23 @@ data class Trade(
     constructor() : this("", "", "", BigDecimal.ZERO, BigDecimal.ZERO)
 }
 
-data class OrderEvent(
-    val userId: String,
-    val side: OrderSide,
-    val price: BigDecimal,
-    val quantity: BigDecimal,
-)
-
 data class OrderBook(
     // Bids (BUYS): Highest price first. If same price, oldest first.
-    val bids: TreeSet<Order> =
+    val bids: TreeSet<OrderEntity> =
         TreeSet(
-            compareByDescending<Order> { it.price }
+            compareByDescending<OrderEntity> { it.price }
                 .thenBy { it.timestamp }
                 .thenBy { it.id },
         ),
     // Asks (SELLS): Lowest price first. If same price, oldest first.
-    val asks: TreeSet<Order> =
+    val asks: TreeSet<OrderEntity> =
         TreeSet(
-            compareBy<Order> { it.price }
+            compareBy<OrderEntity> { it.price }
                 .thenBy { it.timestamp }
                 .thenBy { it.id },
         ),
 ) {
-    fun addOrder(order: Order) {
+    fun addOrder(order: OrderEntity) {
         when (order.side) {
             OrderSide.BUY -> bids.add(order)
             OrderSide.SELL -> asks.add(order)

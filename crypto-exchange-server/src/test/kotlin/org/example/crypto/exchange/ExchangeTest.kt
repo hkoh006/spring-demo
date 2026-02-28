@@ -28,7 +28,7 @@ class ExchangeTest {
     @Test
     fun `test simple match and persistence`() {
         val sellOrder =
-            Order(
+            OrderEntity(
                 userId = "seller",
                 side = OrderSide.SELL,
                 price = BigDecimal("100"),
@@ -37,7 +37,7 @@ class ExchangeTest {
         exchange.placeOrder(sellOrder)
 
         val buyOrder =
-            Order(
+            OrderEntity(
                 userId = "buyer",
                 side = OrderSide.BUY,
                 price = BigDecimal("100"),
@@ -71,7 +71,7 @@ class ExchangeTest {
     fun `test price priority`() {
         // Higher sell price
         exchange.placeOrder(
-            Order(
+            OrderEntity(
                 userId = "seller1",
                 side = OrderSide.SELL,
                 price = BigDecimal("101"),
@@ -81,7 +81,7 @@ class ExchangeTest {
 
         // Lower sell price (should be matched first)
         exchange.placeOrder(
-            Order(
+            OrderEntity(
                 userId = "seller2",
                 side = OrderSide.SELL,
                 price = BigDecimal("100"),
@@ -90,7 +90,7 @@ class ExchangeTest {
         )
 
         val buyOrder =
-            Order(
+            OrderEntity(
                 userId = "buyer",
                 side = OrderSide.BUY,
                 price = BigDecimal("105"),

@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface OrderRepository : JpaRepository<Order, String>
+interface OrderRepository : JpaRepository<OrderEntity, String>
 
 @Repository
-interface TradeRepository : JpaRepository<Trade, String>
+interface TradeRepository : JpaRepository<TradeEntity, String>

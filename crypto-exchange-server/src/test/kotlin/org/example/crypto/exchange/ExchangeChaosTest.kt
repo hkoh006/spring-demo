@@ -38,7 +38,7 @@ class ExchangeChaosTest {
             val quantity = BigDecimal(random.nextDouble() * 10 + 0.1).setScale(8, RoundingMode.HALF_UP)
 
             val order =
-                Order(
+                OrderEntity(
                     userId = "user-${random.nextInt(10)}",
                     side = side,
                     price = price,
@@ -108,7 +108,7 @@ class ExchangeChaosTest {
     }
 }
 
-private fun Iterable<Order>.sumOf(selector: (Order) -> BigDecimal): BigDecimal {
+private fun Iterable<OrderEntity>.sumOf(selector: (OrderEntity) -> BigDecimal): BigDecimal {
     var sum = BigDecimal.ZERO
     for (element in this) {
         sum += selector(element)

@@ -1,0 +1,129 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:63263
+  description: Generated server url
+paths:
+  /api/trades:
+    get:
+      tags:
+      - trade-endpoint
+      operationId: getAllTrades
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradeEntity"
+  /api/trades/{id}:
+    get:
+      tags:
+      - trade-endpoint
+      operationId: getTradeById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TradeEntity"
+  /api/orders:
+    get:
+      tags:
+      - order-endpoint
+      operationId: getAllOrders
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderEntity"
+  /api/orders/{id}:
+    get:
+      tags:
+      - order-endpoint
+      operationId: getOrderById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/OrderEntity"
+components:
+  schemas:
+    TradeEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        buyerId:
+          type: string
+        sellerId:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+      required:
+      - buyerId
+      - id
+      - price
+      - quantity
+      - sellerId
+      - timestamp
+    OrderEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        side:
+          type: string
+          enum:
+          - BUY
+          - SELL
+        price:
+          type: number
+        quantity:
+          type: number
+        remainingQuantity:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+        isFilled:
+          type: boolean
+      required:
+      - id
+      - isFilled
+      - price
+      - quantity
+      - remainingQuantity
+      - side
+      - timestamp
+      - userId
