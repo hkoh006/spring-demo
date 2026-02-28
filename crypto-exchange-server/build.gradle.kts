@@ -77,12 +77,20 @@ sourceSets {
 }
 
 openApiValidate {
-    inputSpec.set(layout.projectDirectory.file("src/main/resources/crypto-exchange-openapi.yaml").asFile.absolutePath)
+    inputSpec.set(
+        layout.projectDirectory
+            .file("src/main/resources/crypto-exchange-openapi.yaml")
+            .asFile.absolutePath,
+    )
 }
 
 openApiGenerate {
     generatorName.set("kotlin-spring")
-    inputSpec.set(layout.projectDirectory.file("src/main/resources/crypto-exchange-openapi.yaml").asFile.absolutePath)
+    inputSpec.set(
+        layout.projectDirectory
+            .file("src/main/resources/crypto-exchange-openapi.yaml")
+            .asFile.absolutePath,
+    )
     outputDir.set(layout.buildDirectory.dir("generated/openapi").map { it.asFile.absolutePath })
     apiPackage.set("org.example.crypto.exchange.api")
     modelPackage.set("org.example.crypto.exchange.model")

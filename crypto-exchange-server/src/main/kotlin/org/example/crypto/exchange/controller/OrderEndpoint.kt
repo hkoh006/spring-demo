@@ -4,19 +4,14 @@ import org.example.crypto.exchange.OrderRepository
 import org.example.crypto.exchange.api.OrderEndpointApi
 import org.example.crypto.exchange.model.OrderEntity
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.stereotype.Component
 import java.time.ZoneOffset
 import kotlin.jvm.optionals.getOrNull
 
-@RestController
-@RequestMapping("/api/orders")
+@Component
 class OrderEndpoint(
     private val orderRepository: OrderRepository,
 ) : OrderEndpointApi {
-    @GetMapping
     override fun getAllOrders(): ResponseEntity<List<OrderEntity>> =
         ResponseEntity.ok(
             orderRepository.findAll().map {
@@ -33,10 +28,7 @@ class OrderEndpoint(
             },
         )
 
-    @GetMapping("/{id}")
-    override fun getOrderById(
-        @PathVariable id: String,
-    ): ResponseEntity<OrderEntity> =
+    override fun getOrderById(id: String): ResponseEntity<OrderEntity> =
         orderRepository
             .findById(id)
             .getOrNull()

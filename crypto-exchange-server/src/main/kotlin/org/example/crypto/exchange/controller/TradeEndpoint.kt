@@ -4,19 +4,14 @@ import org.example.crypto.exchange.TradeRepository
 import org.example.crypto.exchange.api.TradeEndpointApi
 import org.example.crypto.exchange.model.TradeEntity
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.stereotype.Component
 import java.time.ZoneOffset
 import kotlin.jvm.optionals.getOrNull
 
-@RestController
-@RequestMapping("/api/trades")
+@Component
 class TradeEndpoint(
     private val tradeRepository: TradeRepository,
 ) : TradeEndpointApi {
-    @GetMapping
     override fun getAllTrades(): ResponseEntity<List<TradeEntity>> =
         ResponseEntity.ok(
             tradeRepository.findAll().map {
@@ -31,10 +26,7 @@ class TradeEndpoint(
             },
         )
 
-    @GetMapping("/{id}")
-    override fun getTradeById(
-        @PathVariable id: String,
-    ): ResponseEntity<TradeEntity> =
+    override fun getTradeById(id: String): ResponseEntity<TradeEntity> =
         tradeRepository
             .findById(id)
             .getOrNull()

@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: crypto-exchange-server
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/crypto-exchange
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver

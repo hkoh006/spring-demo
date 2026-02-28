@@ -1,0 +1,21 @@
+plugins {
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.spring.dependency.management)
+}
+
+dependencies {
+    implementation(platform(libs.spring.boot.dependencies))
+    implementation(libs.spring.boot.testcontainers)
+    implementation(libs.testcontainers.postgresql)
+    implementation(libs.testcontainers.kafka)
+    implementation(libs.testcontainers.junit.jupiter)
+
+    implementation(project(":crypto-exchange-server"))
+
+    // OpenAPI + Scalar UI (via springdoc)
+    implementation(libs.springdoc.openapi.starter.webmvc.scalar)
+
+    runtimeOnly(libs.postgresql)
+}
