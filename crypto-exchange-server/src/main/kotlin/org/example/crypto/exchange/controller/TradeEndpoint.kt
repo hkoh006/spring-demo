@@ -3,7 +3,6 @@ package org.example.crypto.exchange.controller
 import org.example.crypto.exchange.TradeRepository
 import org.example.crypto.exchange.api.TradeEndpointApi
 import org.example.crypto.exchange.model.TradeDto
-import org.example.crypto.exchange.model.TradeEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import java.time.ZoneOffset
