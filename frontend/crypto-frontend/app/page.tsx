@@ -1,45 +1,59 @@
-import Image from "next/image";
 import {Suspense} from "react";
-import ProductTable from "@/app/ProductTable";
+import {OrderTable, TradeTable} from "@/app/ProductTable";
 
-async function fetchData() {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    let products: Product[] = [
-        {id: 1, name: 'Laptop', price: 1200, category: 'Electronics'},
-        {id: 2, name: 'Keyboard', price: 75, category: 'Accessories'},
-        {id: 3, name: 'Mouse', price: 25, category: 'Accessories'},
-        {id: 4, name: 'Monitor', price: 300, category: 'Electronics'},
-        {id: 5, name: 'Webcam', price: 50, category: 'Peripherals'},
-    ]
-    return {
-        data: products
+async function fetchOrders(): Promise<Order[]> {
+    try {
+        const response = await fetch('http://localhost:8080/api/orders', {cache: 'no-store'});
+        if (!response.ok) return [];
+        return await response.json();
+    } catch (e) {
+        console.error("Failed to fetch orders", e);
+        return [];
+    }
+}
+
+async function fetchTrades(): Promise<Trade[]> {
+    try {
+        const response = await fetch('http://localhost:8080/api/trades', {cache: 'no-store'});
+        if (!response.ok) return [];
+        return await response.json();
+    } catch (e) {
+        console.error("Failed to fetch trades", e);
+        return [];
     }
 }
 
 export default async function Home() {
-    const {data: products} = await fetchData();
+    const orders = await fetchOrders();
+    const trades = await fetchTrades();
+
     return (
-        <main>
-            <h1>Product List</h1>
-            <Suspense fallback={<div>Loading table...</div>}>
-                <ProductTable
-                    initialProducts={products}
-                />
+        <main style={{padding: '2rem'}}>
+            <h1>Crypto Exchange Dashboard</h1>
+            <Suspense fallback={<div>Loading tables...</div>}>
+                <OrderTable orders={orders}/>
+                <TradeTable trades={trades}/>
             </Suspense>
         </main>
     );
 }
 
-export class Product {
-    id: number;
-    name: string;
+export interface Order {
+    id: string;
+    userId: string;
+    side: 'BUY' | 'SELL';
     price: number;
-    category: string;
+    quantity: number;
+    remainingQuantity: number;
+    timestamp: string;
+    isFilled: boolean;
+}
 
-    constructor(id: number, name: string, price: number, category: string) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.category = category;
-    }
+export interface Trade {
+    id: string;
+    buyerId: string;
+    sellerId: string;
+    price: number;
+    quantity: number;
+    timestamp: string;
 }
