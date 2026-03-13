@@ -1,9 +1,10 @@
-import {Suspense} from "react";
-import {OrderTable, TradeTable} from "@/app/ProductTable";
+import { Suspense } from "react";
+import { OrderTable, TradeTable } from "@/app/ExchangeTable";
+import { AutoRefresh } from "@/app/AutoRefresh";
 
 async function fetchOrders(): Promise<Order[]> {
     try {
-        const response = await fetch('http://localhost:8080/api/orders', {cache: 'no-store'});
+        const response = await fetch('http://localhost:8080/api/orders', { cache: 'no-store' });
         if (!response.ok) return [];
         return await response.json();
     } catch (e) {
@@ -14,7 +15,7 @@ async function fetchOrders(): Promise<Order[]> {
 
 async function fetchTrades(): Promise<Trade[]> {
     try {
-        const response = await fetch('http://localhost:8080/api/trades', {cache: 'no-store'});
+        const response = await fetch('http://localhost:8080/api/trades', { cache: 'no-store' });
         if (!response.ok) return [];
         return await response.json();
     } catch (e) {
@@ -24,17 +25,75 @@ async function fetchTrades(): Promise<Trade[]> {
 }
 
 export default async function Home() {
-    const orders = await fetchOrders();
-    const trades = await fetchTrades();
+    const [orders, trades] = await Promise.all([fetchOrders(), fetchTrades()]);
+
+    const openOrders = orders.filter(o => !o.isFilled).length;
+    const filledOrders = orders.filter(o => o.isFilled).length;
+    const buyOrders = orders.filter(o => o.side === 'BUY').length;
+    const sellOrders = orders.filter(o => o.side === 'SELL').length;
+    const tradeVolume = trades.reduce((sum, t) => sum + Number(t.quantity), 0);
 
     return (
-        <main style={{padding: '2rem'}}>
-            <h1>Crypto Exchange Dashboard</h1>
-            <Suspense fallback={<div>Loading tables...</div>}>
-                <OrderTable orders={orders}/>
-                <TradeTable trades={trades}/>
-            </Suspense>
-        </main>
+        <div className="min-h-screen bg-[#09090f] text-slate-200">
+            <AutoRefresh intervalMs={3000} />
+
+            {/* Header */}
+            <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur sticky top-0 z-10">
+                <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold tracking-tight text-white">⚡ Crypto Exchange</span>
+                        <span className="text-xs text-zinc-500 font-mono">BTC/USDT</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span>LIVE · refreshes every 3s</span>
+                    </div>
+                </div>
+            </header>
+
+            <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+
+                {/* Stats row */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <StatCard label="Total Orders" value={orders.length} />
+                    <StatCard label="Open" value={openOrders} valueClass="text-amber-400" />
+                    <StatCard label="Filled" value={filledOrders} valueClass="text-zinc-400" />
+                    <StatCard label="Buys" value={buyOrders} valueClass="text-emerald-400" />
+                    <StatCard label="Sells" value={sellOrders} valueClass="text-rose-400" />
+                    <StatCard label="Trade Volume" value={tradeVolume.toFixed(2)} valueClass="text-sky-400" />
+                </div>
+
+                {/* Tables */}
+                <Suspense fallback={<LoadingCard />}>
+                    <OrderTable orders={orders} />
+                    <TradeTable trades={trades} />
+                </Suspense>
+            </main>
+        </div>
+    );
+}
+
+function StatCard({ label, value, valueClass = "text-white" }: {
+    label: string;
+    value: number | string;
+    valueClass?: string;
+}) {
+    return (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3">
+            <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">{label}</p>
+            <p className={`text-xl font-bold font-mono ${valueClass}`}>{value}</p>
+        </div>
+    );
+}
+
+function LoadingCard() {
+    return (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center text-zinc-500 animate-pulse">
+            Loading…
+        </div>
     );
 }
 

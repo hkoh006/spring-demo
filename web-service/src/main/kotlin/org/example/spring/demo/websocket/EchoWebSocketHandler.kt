@@ -20,7 +20,7 @@ class EchoWebSocketHandler : TextWebSocketHandler() {
         session.sendMessage(TextMessage($$"connected: ${session.id}"))
     }
 
-    override fun handleTextMessage(
+    public override fun handleTextMessage(
         session: WebSocketSession,
         message: TextMessage,
     ) {

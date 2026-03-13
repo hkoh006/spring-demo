@@ -12,3 +12,14 @@ spring:
     username: user
     password: password
     driver-class-name: org.postgresql.Driver
+  kafka:
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializer
+      properties:
+        schema.registry.url: mock://crypto-exchange-local
+        auto.register.schemas: true
+        specific.protobuf.value.type: org.example.crypto.exchange.messaging.proto.OrderEventProto
+    properties:
+      schema.registry.url: mock://crypto-exchange-local
+      auto.register.schemas: true

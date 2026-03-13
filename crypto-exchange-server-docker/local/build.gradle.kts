@@ -13,6 +13,7 @@ dependencies {
     implementation(libs.testcontainers.junit.jupiter)
 
     implementation(project(":crypto-exchange-server"))
+    implementation(project(":order-generator"))
 
     // OpenAPI + Scalar UI (via springdoc)
     implementation(libs.springdoc.openapi.starter.webmvc.scalar)
