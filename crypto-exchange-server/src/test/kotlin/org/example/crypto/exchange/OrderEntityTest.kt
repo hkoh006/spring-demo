@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
+import java.util.UUID
 
 /**
  * Pure unit tests for [OrderEntity] — no Spring context needed.
@@ -105,8 +106,9 @@ class OrderEntityTest {
     @Test
     fun `two orders with the same id are equal`() {
         val id = "fixed-id"
-        val o1 = order(id = id, quantity = BigDecimal("1.0"))
-        val o2 = order(id = id, quantity = BigDecimal("1.0"))
+        val ts = Instant.now()
+        val o1 = order(id = id, quantity = BigDecimal("1.0"), timestamp = ts)
+        val o2 = order(id = id, quantity = BigDecimal("1.0"), timestamp = ts)
         assertThat(o1).isEqualTo(o2)
     }
 
@@ -122,12 +124,13 @@ class OrderEntityTest {
     // -------------------------------------------------------------------------
 
     private fun order(
-        id: String = "test-id",
+        id: String = UUID.randomUUID().toString(),
         userId: String = "user-1",
         side: OrderSide = OrderSide.BUY,
         price: BigDecimal = BigDecimal("100"),
         quantity: BigDecimal = BigDecimal("1.0"),
         remainingQuantity: BigDecimal = quantity,
+        timestamp: Instant = Instant.now(),
     ) = OrderEntity(
         id = id,
         userId = userId,
@@ -135,5 +138,6 @@ class OrderEntityTest {
         price = price,
         quantity = quantity,
         remainingQuantity = remainingQuantity,
+        timestamp = timestamp,
     )
 }

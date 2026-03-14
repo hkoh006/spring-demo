@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
+import java.util.UUID
 
 /**
  * Pure unit tests for [TradeEntity] — no Spring context needed.
@@ -147,7 +148,7 @@ class TradeEntityTest {
     // -------------------------------------------------------------------------
 
     private fun trade(
-        id: String = "trade-id",
+        id: String = UUID.randomUUID().toString(),
         buyerId: String = "buyer",
         sellerId: String = "seller",
         price: BigDecimal = BigDecimal("100"),

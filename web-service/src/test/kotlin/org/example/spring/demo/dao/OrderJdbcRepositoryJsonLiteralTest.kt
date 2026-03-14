@@ -1,20 +1,20 @@
 package org.example.spring.demo.dao
 
 import com.blazebit.persistence.CriteriaBuilderFactory
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
-import org.mockito.junit.jupiter.MockitoExtension
 import java.lang.reflect.Method
 
 /**
  * Unit tests for the `jsonTextArrayLiteral` private helper inside [OrderJdbcRepository].
  *
  * The helper is private, so it is accessed via reflection on a real (not mocked)
- * instance. The constructor dependencies are satisfied with Mockito mocks because
+ * instance. The constructor dependencies are satisfied with MockK mocks because
  * the method under test calls neither of them.
  *
  * Format contract:
@@ -27,12 +27,12 @@ import java.lang.reflect.Method
  * Full query-level verification (WHERE clause correctness against a real
  * PostgreSQL instance) lives in [OrderEntityTest].
  */
-@ExtendWith(MockitoExtension::class)
+@ExtendWith(MockKExtension::class)
 class OrderJdbcRepositoryJsonLiteralTest {
-    @Mock
+    @MockK
     private lateinit var entityManager: EntityManager
 
-    @Mock
+    @MockK
     private lateinit var criteriaBuilderFactory: CriteriaBuilderFactory
 
     /** The reflected private method, made accessible once for the test class. */

@@ -1,13 +1,13 @@
 package org.example.crypto.exchange.generator
 
+import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.junit5.MockKExtension
+import io.mockk.verify
 import org.example.crypto.exchange.messaging.proto.OrderEventProto
 import org.example.crypto.exchange.messaging.proto.OrderSideProto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
-import org.mockito.Mockito.verify
-import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.kafka.core.KafkaTemplate
 
 /**
@@ -16,9 +16,9 @@ import org.springframework.kafka.core.KafkaTemplate
  * Verifies that [KafkaTemplate.send] is called with the correct topic,
  * key (userId), and event payload.
  */
-@ExtendWith(MockitoExtension::class)
+@ExtendWith(MockKExtension::class)
 class OrderPublisherTest {
-    @Mock
+    @RelaxedMockK
     private lateinit var kafkaTemplate: KafkaTemplate<String, OrderEventProto>
 
     private val props = OrderGeneratorProperties(topic = "orders")
@@ -43,7 +43,7 @@ class OrderPublisherTest {
 
         publisher.publish(event)
 
-        verify(kafkaTemplate).send("orders", "alice", event)
+        verify { kafkaTemplate.send("orders", "alice", event) }
     }
 
     @Test
@@ -61,6 +61,6 @@ class OrderPublisherTest {
 
         customPublisher.publish(event)
 
-        verify(kafkaTemplate).send("custom-orders", "bob", event)
+        verify { kafkaTemplate.send("custom-orders", "bob", event) }
     }
 }

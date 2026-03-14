@@ -25,6 +25,7 @@ dependencies {
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
     testImplementation(libs.spring.boot.test)
     testImplementation(libs.spring.boot.webmvc.test)
     testImplementation(libs.spring.boot.testcontainers)

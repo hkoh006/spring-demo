@@ -17,6 +17,7 @@ dependencies {
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
     testImplementation(libs.spring.boot.test)
     testRuntimeOnly(libs.junit.platform.launcher)
 }

@@ -1,14 +1,14 @@
 package org.example.spring.demo.websocket
 
+import io.mockk.every
+import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.junit5.MockKExtension
+import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
@@ -19,9 +19,9 @@ import org.springframework.web.socket.WebSocketSession
  * Each WebSocket lifecycle event (connect, message, disconnect) is verified
  * in isolation with a mocked [WebSocketSession].
  */
-@ExtendWith(MockitoExtension::class)
+@ExtendWith(MockKExtension::class)
 class EchoWebSocketHandlerTest {
-    @Mock
+    @RelaxedMockK
     private lateinit var session: WebSocketSession
 
     private lateinit var handler: EchoWebSocketHandler
@@ -29,7 +29,7 @@ class EchoWebSocketHandlerTest {
     @BeforeEach
     fun setUp() {
         handler = EchoWebSocketHandler()
-        `when`(session.id).thenReturn("session-123")
+        every { session.id } returns "session-123"
     }
 
     // -------------------------------------------------------------------------
@@ -40,20 +40,20 @@ class EchoWebSocketHandlerTest {
     fun `should send connection acknowledgement message after handshake`() {
         handler.afterConnectionEstablished(session)
 
-        val captor = ArgumentCaptor.forClass(TextMessage::class.java)
-        verify(session).sendMessage(captor.capture())
+        val slot = slot<TextMessage>()
+        verify { session.sendMessage(capture(slot)) }
 
-        assertThat(captor.value.payload).contains("session-123")
+        assertThat(slot.captured.payload).contains("session-123")
     }
 
     @Test
     fun `connection acknowledgement should start with connected prefix`() {
         handler.afterConnectionEstablished(session)
 
-        val captor = ArgumentCaptor.forClass(TextMessage::class.java)
-        verify(session).sendMessage(captor.capture())
+        val slot = slot<TextMessage>()
+        verify { session.sendMessage(capture(slot)) }
 
-        assertThat(captor.value.payload).startsWith("connected:")
+        assertThat(slot.captured.payload).startsWith("connected:")
     }
 
     // -------------------------------------------------------------------------
@@ -66,10 +66,10 @@ class EchoWebSocketHandlerTest {
 
         handler.handleTextMessage(session, inbound)
 
-        val captor = ArgumentCaptor.forClass(TextMessage::class.java)
-        verify(session).sendMessage(captor.capture())
+        val slot = slot<TextMessage>()
+        verify { session.sendMessage(capture(slot)) }
 
-        assertThat(captor.value.payload).contains("hello")
+        assertThat(slot.captured.payload).contains("hello")
     }
 
     @Test
@@ -78,10 +78,10 @@ class EchoWebSocketHandlerTest {
 
         handler.handleTextMessage(session, inbound)
 
-        val captor = ArgumentCaptor.forClass(TextMessage::class.java)
-        verify(session).sendMessage(captor.capture())
+        val slot = slot<TextMessage>()
+        verify { session.sendMessage(capture(slot)) }
 
-        assertThat(captor.value.payload).startsWith("echo:")
+        assertThat(slot.captured.payload).startsWith("echo:")
     }
 
     @Test
@@ -90,9 +90,9 @@ class EchoWebSocketHandlerTest {
 
         handler.handleTextMessage(session, inbound)
 
-        val captor = ArgumentCaptor.forClass(TextMessage::class.java)
-        verify(session).sendMessage(captor.capture())
-        assertThat(captor.value.payload).isNotNull()
+        val slot = slot<TextMessage>()
+        verify { session.sendMessage(capture(slot)) }
+        assertThat(slot.captured.payload).isNotNull()
     }
 
     @Test
@@ -102,10 +102,10 @@ class EchoWebSocketHandlerTest {
 
         handler.handleTextMessage(session, inbound)
 
-        val captor = ArgumentCaptor.forClass(TextMessage::class.java)
-        verify(session).sendMessage(captor.capture())
+        val slot = slot<TextMessage>()
+        verify { session.sendMessage(capture(slot)) }
 
-        assertThat(captor.value.payload).contains(payload)
+        assertThat(slot.captured.payload).contains(payload)
     }
 
     // -------------------------------------------------------------------------

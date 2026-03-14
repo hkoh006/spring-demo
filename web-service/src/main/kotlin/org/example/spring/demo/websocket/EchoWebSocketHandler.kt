@@ -17,7 +17,7 @@ class EchoWebSocketHandler : TextWebSocketHandler() {
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
         log.info("WebSocket connected: {}", session.id)
-        session.sendMessage(TextMessage($$"connected: ${session.id}"))
+        session.sendMessage(TextMessage("connected: ${session.id}"))
     }
 
     public override fun handleTextMessage(
@@ -26,7 +26,7 @@ class EchoWebSocketHandler : TextWebSocketHandler() {
     ) {
         val payload = message.payload
         log.debug("WebSocket message from {}: {}", session.id, payload)
-        session.sendMessage(TextMessage($$"echo: $payload"))
+        session.sendMessage(TextMessage("echo: $payload"))
     }
 
     override fun afterConnectionClosed(

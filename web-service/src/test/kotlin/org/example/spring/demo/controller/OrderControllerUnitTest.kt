@@ -1,5 +1,12 @@
 package org.example.spring.demo.controller
 
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
+import io.mockk.just
+import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.example.spring.demo.dao.OrderJpaRepository
 import org.example.spring.demo.dao.model.Allocation
@@ -11,12 +18,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.Mock
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.http.HttpStatus
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.web.context.request.RequestContextHolder
@@ -26,14 +27,14 @@ import org.springframework.web.util.UriComponentsBuilder
 import java.util.Optional
 
 /**
- * Pure unit tests for [OrderController] using Mockito — no Spring context, no database.
+ * Pure unit tests for [OrderController] using MockK — no Spring context, no database.
  *
  * Full HTTP integration tests (status codes, serialization, Location headers)
  * live in [OrderControllerTest].
  */
-@ExtendWith(MockitoExtension::class)
+@ExtendWith(MockKExtension::class)
 class OrderControllerUnitTest {
-    @Mock
+    @MockK
     private lateinit var repository: OrderJpaRepository
 
     private lateinit var controller: OrderController
@@ -64,7 +65,7 @@ class OrderControllerUnitTest {
         @Test
         fun `should return order when it exists`() {
             val entity = orderEntity(id = 1L)
-            `when`(repository.findById(1L)).thenReturn(Optional.of(entity))
+            every { repository.findById(1L) } returns Optional.of(entity)
 
             val result = controller.getById(1L)
 
@@ -73,7 +74,7 @@ class OrderControllerUnitTest {
 
         @Test
         fun `should throw 404 when order does not exist`() {
-            `when`(repository.findById(anyLong())).thenReturn(Optional.empty())
+            every { repository.findById(any()) } returns Optional.empty()
 
             val ex = assertThrows<ResponseStatusException> { controller.getById(999L) }
             assertThat(ex.statusCode.value()).isEqualTo(404)
@@ -81,7 +82,7 @@ class OrderControllerUnitTest {
 
         @Test
         fun `should include order id in the 404 message`() {
-            `when`(repository.findById(42L)).thenReturn(Optional.empty())
+            every { repository.findById(42L) } returns Optional.empty()
 
             val ex = assertThrows<ResponseStatusException> { controller.getById(42L) }
             assertThat(ex.reason).contains("42")
@@ -97,8 +98,8 @@ class OrderControllerUnitTest {
         @Test
         fun `should save and return 201 when order with valid id is provided`() {
             val entity = orderEntity(id = 10L)
-            `when`(repository.existsById(10L)).thenReturn(false)
-            `when`(repository.save(entity)).thenReturn(entity)
+            every { repository.existsById(10L) } returns false
+            every { repository.save(entity) } returns entity
 
             val response = controller.create(entity, uriBuilder)
 
@@ -109,8 +110,8 @@ class OrderControllerUnitTest {
         @Test
         fun `should set Location header pointing to the new order`() {
             val entity = orderEntity(id = 10L)
-            `when`(repository.existsById(10L)).thenReturn(false)
-            `when`(repository.save(entity)).thenReturn(entity)
+            every { repository.existsById(10L) } returns false
+            every { repository.save(entity) } returns entity
 
             val response = controller.create(entity, uriBuilder)
 
@@ -128,7 +129,7 @@ class OrderControllerUnitTest {
         @Test
         fun `should throw 409 when order with same id already exists`() {
             val entity = orderEntity(id = 5L)
-            `when`(repository.existsById(5L)).thenReturn(true)
+            every { repository.existsById(5L) } returns true
 
             val ex = assertThrows<ResponseStatusException> { controller.create(entity, uriBuilder) }
             assertThat(ex.statusCode.value()).isEqualTo(409)
@@ -140,17 +141,17 @@ class OrderControllerUnitTest {
 
             runCatching { controller.create(entity, uriBuilder) }
 
-            verify(repository, never()).save(entity)
+            verify(exactly = 0) { repository.save(entity) }
         }
 
         @Test
         fun `should not call save when order already exists`() {
             val entity = orderEntity(id = 5L)
-            `when`(repository.existsById(5L)).thenReturn(true)
+            every { repository.existsById(5L) } returns true
 
             runCatching { controller.create(entity, uriBuilder) }
 
-            verify(repository, never()).save(entity)
+            verify(exactly = 0) { repository.save(entity) }
         }
     }
 
@@ -162,14 +163,13 @@ class OrderControllerUnitTest {
     inner class Update {
         @Test
         fun `should save and return updated order`() {
-            val existing = orderEntity(id = 1L)
             val incoming =
                 orderEntity(
                     id = 1L,
                     allocations = listOf(Allocation("b1", 50)),
                 )
-            `when`(repository.existsById(1L)).thenReturn(true)
-            `when`(repository.save(org.mockito.ArgumentMatchers.any())).thenReturn(incoming)
+            every { repository.existsById(1L) } returns true
+            every { repository.save(any()) } returns incoming
 
             val result = controller.update(1L, incoming)
 
@@ -180,19 +180,19 @@ class OrderControllerUnitTest {
         fun `should enforce path id over body id`() {
             // Body carries id = 999 but path is 1 — the saved entity must use id = 1
             val incoming = orderEntity(id = 999L)
-            `when`(repository.existsById(1L)).thenReturn(true)
+            every { repository.existsById(1L) } returns true
 
-            val savedCaptor = org.mockito.ArgumentCaptor.forClass(OrderEntity::class.java)
-            `when`(repository.save(savedCaptor.capture())).thenAnswer { savedCaptor.value }
+            val slot = slot<OrderEntity>()
+            every { repository.save(capture(slot)) } answers { slot.captured }
 
             controller.update(1L, incoming)
 
-            assertThat(savedCaptor.value.id).isEqualTo(1L)
+            assertThat(slot.captured.id).isEqualTo(1L)
         }
 
         @Test
         fun `should throw 404 when order to update does not exist`() {
-            `when`(repository.existsById(anyLong())).thenReturn(false)
+            every { repository.existsById(any()) } returns false
 
             val ex =
                 assertThrows<ResponseStatusException> {
@@ -210,17 +210,18 @@ class OrderControllerUnitTest {
     inner class Delete {
         @Test
         fun `should return 204 and delete order when it exists`() {
-            `when`(repository.existsById(1L)).thenReturn(true)
+            every { repository.existsById(1L) } returns true
+            every { repository.deleteById(1L) } just Runs
 
             val response = controller.delete(1L)
 
             assertThat(response.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
-            verify(repository).deleteById(1L)
+            verify { repository.deleteById(1L) }
         }
 
         @Test
         fun `should throw 404 when order to delete does not exist`() {
-            `when`(repository.existsById(anyLong())).thenReturn(false)
+            every { repository.existsById(any()) } returns false
 
             val ex = assertThrows<ResponseStatusException> { controller.delete(1L) }
             assertThat(ex.statusCode.value()).isEqualTo(404)
@@ -228,11 +229,11 @@ class OrderControllerUnitTest {
 
         @Test
         fun `should not call deleteById when order does not exist`() {
-            `when`(repository.existsById(anyLong())).thenReturn(false)
+            every { repository.existsById(any()) } returns false
 
             runCatching { controller.delete(1L) }
 
-            verify(repository, never()).deleteById(anyLong())
+            verify(exactly = 0) { repository.deleteById(any()) }
         }
     }
 
