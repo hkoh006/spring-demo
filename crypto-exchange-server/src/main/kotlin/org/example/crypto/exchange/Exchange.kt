@@ -56,6 +56,7 @@ class Exchange(
         val iterator = orderBook.asks.iterator()
         while (iterator.hasNext() && !buyOrder.isFilled()) {
             val ask = iterator.next()
+            if (ask.userId == buyOrder.userId) continue
             if (buyOrder.price >= ask.price) {
                 val fillQuantity = buyOrder.remainingQuantity.min(ask.remainingQuantity)
 
@@ -92,6 +93,7 @@ class Exchange(
         val iterator = orderBook.bids.iterator()
         while (iterator.hasNext() && !sellOrder.isFilled()) {
             val bid = iterator.next()
+            if (bid.userId == sellOrder.userId) continue
             if (sellOrder.price <= bid.price) {
                 val fillQuantity = sellOrder.remainingQuantity.min(bid.remainingQuantity)
 

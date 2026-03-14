@@ -242,6 +242,51 @@ class ExchangeUnitTest {
     }
 
     // -------------------------------------------------------------------------
+    // Self-trade prevention
+    // -------------------------------------------------------------------------
+
+    @Nested
+    inner class SelfTradePrevention {
+        @Test
+        fun `buy order should not match against same user's resting sell`() {
+            exchange.placeOrder(sellOrder(userId = "user1", price = "100", qty = "1.0"))
+            val trades = exchange.placeOrder(buyOrder(userId = "user1", price = "100", qty = "1.0"))
+
+            assertThat(trades).isEmpty()
+        }
+
+        @Test
+        fun `sell order should not match against same user's resting buy`() {
+            exchange.placeOrder(buyOrder(userId = "user1", price = "100", qty = "1.0"))
+            val trades = exchange.placeOrder(sellOrder(userId = "user1", price = "100", qty = "1.0"))
+
+            assertThat(trades).isEmpty()
+        }
+
+        @Test
+        fun `buy order should skip same-user ask and match a different user's ask`() {
+            exchange.placeOrder(sellOrder(userId = "user1", price = "100", qty = "1.0"))
+            exchange.placeOrder(sellOrder(userId = "user2", price = "101", qty = "1.0"))
+
+            val trades = exchange.placeOrder(buyOrder(userId = "user1", price = "105", qty = "1.0"))
+
+            assertThat(trades).hasSize(1)
+            assertThat(trades[0].sellerId).isEqualTo("user2")
+        }
+
+        @Test
+        fun `sell order should skip same-user bid and match a different user's bid`() {
+            exchange.placeOrder(buyOrder(userId = "user1", price = "100", qty = "1.0"))
+            exchange.placeOrder(buyOrder(userId = "user2", price = "99", qty = "1.0"))
+
+            val trades = exchange.placeOrder(sellOrder(userId = "user1", price = "95", qty = "1.0"))
+
+            assertThat(trades).hasSize(1)
+            assertThat(trades[0].buyerId).isEqualTo("user2")
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Order book state after clear()
     // -------------------------------------------------------------------------
 
