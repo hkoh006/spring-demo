@@ -2,6 +2,7 @@ package org.example.crypto.exchange.generator
 
 import org.example.crypto.exchange.messaging.proto.OrderEventProto
 import org.example.crypto.exchange.messaging.proto.OrderSideProto
+import org.example.crypto.exchange.messaging.proto.OrderTypeProto
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
@@ -17,6 +18,7 @@ class OrderGeneratorService(
     fun generateAndPublish() {
         if (!props.enabled) return
 
+        val orderType = if (Random.nextBoolean()) OrderTypeProto.MARKET else OrderTypeProto.LIMIT
         val event =
             OrderEventProto
                 .newBuilder()
@@ -24,6 +26,7 @@ class OrderGeneratorService(
                 .setSide(if (Random.nextBoolean()) OrderSideProto.BUY else OrderSideProto.SELL)
                 .setPrice(randomInRange(props.minPrice, props.maxPrice).toPlainString())
                 .setQuantity(randomInRange(props.minQuantity, props.maxQuantity).toPlainString())
+                .setOrderType(orderType)
                 .build()
 
         publisher.publish(event)
