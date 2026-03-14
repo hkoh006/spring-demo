@@ -11,9 +11,15 @@ enum OrderSideProto {
   SELL = 1;
 }
 
+enum OrderTypeProto {
+  MARKET = 0;
+  LIMIT = 1;
+}
+
 message OrderEventProto {
   string user_id = 1;
   OrderSideProto side = 2;
   string price = 3;
   string quantity = 4;
+  OrderTypeProto order_type = 5;
 }

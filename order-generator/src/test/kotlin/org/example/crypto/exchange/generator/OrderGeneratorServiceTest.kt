@@ -3,6 +3,7 @@ package org.example.crypto.exchange.generator
 import org.assertj.core.api.Assertions.assertThat
 import org.example.crypto.exchange.messaging.proto.OrderEventProto
 import org.example.crypto.exchange.messaging.proto.OrderSideProto
+import org.example.crypto.exchange.messaging.proto.OrderTypeProto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
@@ -92,6 +93,13 @@ class OrderGeneratorServiceTest {
         assertThat(quantity)
             .isGreaterThanOrEqualTo(defaultProps.minQuantity)
             .isLessThanOrEqualTo(defaultProps.maxQuantity)
+    }
+
+    @RepeatedTest(20)
+    fun `generated order type should be MARKET or LIMIT`() {
+        service.generateAndPublish()
+
+        assertThat(capturePublishedEvent().orderType).isIn(OrderTypeProto.MARKET, OrderTypeProto.LIMIT)
     }
 
     // -------------------------------------------------------------------------
