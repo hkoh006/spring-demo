@@ -36,7 +36,7 @@ class Exchange(
             matchSellOrder(order, trades)
         }
 
-        if (!order.isFilled()) {
+        if (!order.isFilled() && !wouldCross(order)) {
             orderBook.addOrder(order)
         }
 
@@ -122,6 +122,12 @@ class Exchange(
         // Save the incoming order after matching
         orderRepository.save(sellOrder)
     }
+
+    private fun wouldCross(order: OrderEntity): Boolean =
+        when (order.side) {
+            OrderSide.BUY -> orderBook.asks.isNotEmpty() && order.price >= orderBook.asks.first().price
+            OrderSide.SELL -> orderBook.bids.isNotEmpty() && order.price <= orderBook.bids.first().price
+        }
 
     fun getOrderBook(): OrderBook = orderBook
 

@@ -90,16 +90,15 @@ class ExchangeChaosTest {
         val remainingSellQuantity = orderBook.asks.sumOf { it.remainingQuantity }
 
         // Invariant 2: Conservation of quantity
-        // totalBuyQuantity = executedTradeQuantity + remainingBuyQuantity
-        // totalSellQuantity = executedTradeQuantity + remainingSellQuantity
+        // STP (self-trade prevention) may drop orders that would cross the book, so
+        // traded + remaining <= total (cancelled-due-to-STP quantity accounts for the gap).
+        assertThat((executedTradeQuantity + remainingBuyQuantity).setScale(8, RoundingMode.HALF_UP))
+            .withFailMessage("Buy quantity mismatch: traded + remaining exceeds total placed")
+            .isLessThanOrEqualTo(totalBuyQuantity.setScale(8, RoundingMode.HALF_UP))
 
-        assertThat((executedTradeQuantity + remainingBuyQuantity).setScale(8, RoundingMode.HALF_UP).stripTrailingZeros())
-            .withFailMessage("Buy quantity mismatch")
-            .isEqualTo(totalBuyQuantity.setScale(8, RoundingMode.HALF_UP).stripTrailingZeros())
-
-        assertThat((executedTradeQuantity + remainingSellQuantity).setScale(8, RoundingMode.HALF_UP).stripTrailingZeros())
-            .withFailMessage("Sell quantity mismatch")
-            .isEqualTo(totalSellQuantity.setScale(8, RoundingMode.HALF_UP).stripTrailingZeros())
+        assertThat((executedTradeQuantity + remainingSellQuantity).setScale(8, RoundingMode.HALF_UP))
+            .withFailMessage("Sell quantity mismatch: traded + remaining exceeds total placed")
+            .isLessThanOrEqualTo(totalSellQuantity.setScale(8, RoundingMode.HALF_UP))
 
         println("Chaos test passed with $numOrders orders.")
         println("Total trades: $executedTradeQuantity")

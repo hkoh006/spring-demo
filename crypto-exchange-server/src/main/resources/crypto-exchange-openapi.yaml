@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-- url: http://localhost:63688
+- url: http://localhost:65284
   description: Generated server url
 paths:
   /api/trades:
@@ -70,6 +70,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrderDto"
+  /api/market/analytics:
+    get:
+      tags:
+      - market-analytics-endpoint
+      operationId: getMarketAnalytics
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketAnalyticsDto"
 components:
   schemas:
     TradeDto:
@@ -127,3 +139,20 @@ components:
       - side
       - timestamp
       - userId
+    MarketAnalyticsDto:
+      type: object
+      properties:
+        volume:
+          type: number
+        high:
+          type: number
+        low:
+          type: number
+        lastPrice:
+          type: number
+        bestBid:
+          type: number
+        bestAsk:
+          type: number
+      required:
+      - volume

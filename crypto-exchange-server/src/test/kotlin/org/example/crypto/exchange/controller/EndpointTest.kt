@@ -119,6 +119,59 @@ class EndpointTest {
     }
 
     @Test
+    fun `test get market analytics when no trades exist`() {
+        client
+            .get()
+            .uri("/api/market/analytics")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.volume")
+            .isEqualTo(0)
+            .jsonPath("$.high")
+            .doesNotExist()
+            .jsonPath("$.low")
+            .doesNotExist()
+            .jsonPath("$.lastPrice")
+            .doesNotExist()
+            .jsonPath("$.bestBid")
+            .doesNotExist()
+            .jsonPath("$.bestAsk")
+            .doesNotExist()
+    }
+
+    @Test
+    fun `test get market analytics reflects trade data`() {
+        val trade =
+            TradeEntity(
+                buyerId = "buyer",
+                sellerId = "seller",
+                price = BigDecimal("200"),
+                quantity = BigDecimal("2.5"),
+            )
+        tradeRepository.save(trade)
+
+        client
+            .get()
+            .uri("/api/market/analytics")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.high")
+            .isEqualTo(200)
+            .jsonPath("$.low")
+            .isEqualTo(200)
+            .jsonPath("$.lastPrice")
+            .isEqualTo(200)
+            .jsonPath("$.volume")
+            .isEqualTo(2.5)
+    }
+
+    @Test
     fun `generate openapi spec`() {
         val result =
             client

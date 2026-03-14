@@ -70,7 +70,8 @@ Supported subtypes:
 - **Code generation**: QueryDSL Q-classes via KSP; REST controllers from OpenAPI YAML via OpenAPI Generator plugin
 - **Dual repository pattern**: `OrderJpaRepository` (standard JPA) + `OrderJdbcRepository` (Blaze-Persistence/QueryDSL for JSONB queries)
 - **Thread-safe order matching**: `Exchange.placeOrder()` uses `@Synchronized` + `@Transactional`
-- **Self-trade prevention**: `Exchange` skips order book entries where `userId` matches the incoming order's `userId`; the skipped order remains in the book for other users to match against
+- **Self-trade prevention**: `Exchange` skips order book entries where `userId` matches the incoming order's `userId`; the skipped order remains in the book for other users to match against. A `wouldCross()` guard prevents placing an unmatched order into the book if its price would cross the best opposite-side order (avoids a crossed book when all matching counterparties are self-trades). Such orders are silently dropped (not traded, not booked).
+- **OpenAPI-first controllers**: After editing `crypto-exchange-openapi.yaml`, run `./gradlew :crypto-exchange-server:openApiGenerate` to regenerate interfaces/DTOs under `build/generated/openapi/` before writing controller or service code that imports them.
 
 ## Key File Locations
 
@@ -88,8 +89,11 @@ Supported subtypes:
 | File | Purpose |
 |---|---|
 | `crypto-exchange-server/src/main/proto/order_event.proto` | Protobuf definitions for `OrderEventProto`, `OrderSideProto`, `OrderTypeProto` |
-| `crypto-exchange-server/src/main/kotlin/.../Exchange.kt` | Core order matching engine service |
+| `crypto-exchange-server/src/main/kotlin/.../Exchange.kt` | Core order matching engine service; `wouldCross()` guards book insertion |
 | `crypto-exchange-server/src/main/kotlin/.../Models.kt` | `OrderEntity`, `TradeEntity`, `OrderBook` (in-memory TreeSets) |
+| `crypto-exchange-server/src/main/kotlin/.../Repositories.kt` | `OrderRepository`, `TradeRepository` + `TradeAggregates` projection |
+| `crypto-exchange-server/src/main/kotlin/.../MarketAnalyticsService.kt` | Computes 24h high/low/volume/lastPrice from DB + best bid/ask from order book |
+| `crypto-exchange-server/src/main/kotlin/.../controller/MarketAnalyticsEndpoint.kt` | REST controller at `GET /api/market/analytics` |
 | `crypto-exchange-server/src/main/kotlin/.../messaging/OrderSubscriber.kt` | Kafka consumer on "orders" topic |
 | `crypto-exchange-server/src/main/resources/crypto-exchange-openapi.yaml` | OpenAPI spec (controllers generated from this) |
 
@@ -109,6 +113,6 @@ Supported subtypes:
 
 **web-service**: `OrderTypeSerializationTest`, `OrderDetailsTest`, `OrderEntityTest`, `OrderJdbcRepositoryJsonLiteralTest`, `OrderControllerTest`, `OrderControllerUnitTest`, `EchoWebSocketHandlerTest`, `PgJsonbContainsFunctionTest`
 
-**crypto-exchange-server**: `ExchangeTest`, `ExchangeUnitTest`, `ExchangeChaosTest` (thread-safety), `OrderBookTest`, `OrderSubscriberTest`, `OrderEndpointUnitTest`, `TradeEndpointUnitTest`
+**crypto-exchange-server**: `ExchangeTest`, `ExchangeUnitTest`, `ExchangeChaosTest` (random-order invariants; quantity conservation uses `<=` to allow STP-dropped orders), `OrderBookTest`, `OrderSubscriberTest`, `OrderEndpointUnitTest`, `TradeEndpointUnitTest`, `MarketAnalyticsServiceUnitTest`
 
 **order-generator**: `OrderGeneratorServiceTest` (`@RepeatedTest(20)` for order-type assertion), `OrderPublisherTest`
