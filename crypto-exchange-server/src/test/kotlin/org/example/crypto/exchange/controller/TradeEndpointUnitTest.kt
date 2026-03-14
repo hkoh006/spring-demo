@@ -1,14 +1,14 @@
 package org.example.crypto.exchange.controller
 
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.example.crypto.exchange.TradeEntity
 import org.example.crypto.exchange.TradeRepository
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.http.HttpStatus
 import java.math.BigDecimal
 import java.time.Instant
@@ -19,13 +19,17 @@ import java.util.Optional
  *
  * HTTP wiring is tested at the integration level in [EndpointTest].
  */
-@ExtendWith(MockitoExtension::class)
+@ExtendWith(MockKExtension::class)
 class TradeEndpointUnitTest {
-    @Mock
+    @MockK
     private lateinit var tradeRepository: TradeRepository
 
-    @InjectMocks
     private lateinit var endpoint: TradeEndpoint
+
+    @BeforeEach
+    fun setUp() {
+        endpoint = TradeEndpoint(tradeRepository)
+    }
 
     // -------------------------------------------------------------------------
     // getAllTrades
@@ -33,7 +37,7 @@ class TradeEndpointUnitTest {
 
     @Test
     fun `getAllTrades should return 200 with empty list when no trades exist`() {
-        `when`(tradeRepository.findAll()).thenReturn(emptyList())
+        every { tradeRepository.findAll() } returns emptyList()
 
         val response = endpoint.getAllTrades()
 
@@ -51,7 +55,7 @@ class TradeEndpointUnitTest {
                 price = BigDecimal("99.99"),
                 quantity = BigDecimal("0.5"),
             )
-        `when`(tradeRepository.findAll()).thenReturn(listOf(entity))
+        every { tradeRepository.findAll() } returns listOf(entity)
 
         val body = endpoint.getAllTrades().body!!
 
@@ -73,7 +77,7 @@ class TradeEndpointUnitTest {
                 tradeEntity(id = "t2"),
                 tradeEntity(id = "t3"),
             )
-        `when`(tradeRepository.findAll()).thenReturn(trades)
+        every { tradeRepository.findAll() } returns trades
 
         val body = endpoint.getAllTrades().body!!
         assertThat(body.map { it.id }).containsExactly("t1", "t2", "t3")
@@ -83,7 +87,7 @@ class TradeEndpointUnitTest {
     fun `getAllTrades should map timestamp to UTC OffsetDateTime`() {
         val instant = Instant.parse("2024-01-01T09:30:00Z")
         val entity = tradeEntity(id = "ts-trade", timestamp = instant)
-        `when`(tradeRepository.findAll()).thenReturn(listOf(entity))
+        every { tradeRepository.findAll() } returns listOf(entity)
 
         val dto = endpoint.getAllTrades().body!![0]
         assertThat(dto.timestamp.toInstant()).isEqualTo(instant)
@@ -96,7 +100,7 @@ class TradeEndpointUnitTest {
     @Test
     fun `getTradeById should return 200 with trade when found`() {
         val entity = tradeEntity(id = "trade-99", buyerId = "buyer-X", sellerId = "seller-Y")
-        `when`(tradeRepository.findById("trade-99")).thenReturn(Optional.of(entity))
+        every { tradeRepository.findById("trade-99") } returns Optional.of(entity)
 
         val response = endpoint.getTradeById("trade-99")
 
@@ -110,7 +114,7 @@ class TradeEndpointUnitTest {
 
     @Test
     fun `getTradeById should return 404 when trade does not exist`() {
-        `when`(tradeRepository.findById("missing")).thenReturn(Optional.empty())
+        every { tradeRepository.findById("missing") } returns Optional.empty()
 
         val response = endpoint.getTradeById("missing")
 
@@ -122,7 +126,7 @@ class TradeEndpointUnitTest {
     fun `getTradeById should map timestamp to UTC OffsetDateTime`() {
         val instant = Instant.parse("2024-06-15T12:00:00Z")
         val entity = tradeEntity(id = "t-trade", timestamp = instant)
-        `when`(tradeRepository.findById("t-trade")).thenReturn(Optional.of(entity))
+        every { tradeRepository.findById("t-trade") } returns Optional.of(entity)
 
         val dto = endpoint.getTradeById("t-trade").body!!
         assertThat(dto.timestamp.toInstant()).isEqualTo(instant)

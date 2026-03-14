@@ -1,16 +1,16 @@
 package org.example.crypto.exchange.controller
 
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.example.crypto.exchange.OrderEntity
 import org.example.crypto.exchange.OrderRepository
 import org.example.crypto.exchange.OrderSide
 import org.example.crypto.exchange.model.OrderDto
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.http.HttpStatus
 import java.math.BigDecimal
 import java.time.Instant
@@ -21,13 +21,17 @@ import java.util.Optional
  *
  * HTTP wiring is tested at the integration level in [EndpointTest].
  */
-@ExtendWith(MockitoExtension::class)
+@ExtendWith(MockKExtension::class)
 class OrderEndpointUnitTest {
-    @Mock
+    @MockK
     private lateinit var orderRepository: OrderRepository
 
-    @InjectMocks
     private lateinit var endpoint: OrderEndpoint
+
+    @BeforeEach
+    fun setUp() {
+        endpoint = OrderEndpoint(orderRepository)
+    }
 
     // -------------------------------------------------------------------------
     // getAllOrders
@@ -35,7 +39,7 @@ class OrderEndpointUnitTest {
 
     @Test
     fun `getAllOrders should return 200 with empty list when no orders exist`() {
-        `when`(orderRepository.findAll()).thenReturn(emptyList())
+        every { orderRepository.findAll() } returns emptyList()
 
         val response = endpoint.getAllOrders()
 
@@ -54,7 +58,7 @@ class OrderEndpointUnitTest {
                 quantity = BigDecimal("2.0"),
                 remainingQuantity = BigDecimal("1.0"),
             )
-        `when`(orderRepository.findAll()).thenReturn(listOf(entity))
+        every { orderRepository.findAll() } returns listOf(entity)
 
         val body = endpoint.getAllOrders().body!!
 
@@ -73,7 +77,7 @@ class OrderEndpointUnitTest {
     @Test
     fun `getAllOrders should mark order as filled when remainingQuantity is zero`() {
         val entity = orderEntity(quantity = BigDecimal("1.0"), remainingQuantity = BigDecimal.ZERO)
-        `when`(orderRepository.findAll()).thenReturn(listOf(entity))
+        every { orderRepository.findAll() } returns listOf(entity)
 
         val body = endpoint.getAllOrders().body!!
         assertThat(body[0].isFilled).isTrue()
@@ -82,7 +86,7 @@ class OrderEndpointUnitTest {
     @Test
     fun `getAllOrders should map SELL side correctly`() {
         val entity = orderEntity(side = OrderSide.SELL)
-        `when`(orderRepository.findAll()).thenReturn(listOf(entity))
+        every { orderRepository.findAll() } returns listOf(entity)
 
         val body = endpoint.getAllOrders().body!!
         assertThat(body[0].side).isEqualTo(OrderDto.Side.SELL)
@@ -96,7 +100,7 @@ class OrderEndpointUnitTest {
                 orderEntity(id = "o2"),
                 orderEntity(id = "o3"),
             )
-        `when`(orderRepository.findAll()).thenReturn(orders)
+        every { orderRepository.findAll() } returns orders
 
         val body = endpoint.getAllOrders().body!!
         assertThat(body.map { it.id }).containsExactly("o1", "o2", "o3")
@@ -109,7 +113,7 @@ class OrderEndpointUnitTest {
     @Test
     fun `getOrderById should return 200 with order when found`() {
         val entity = orderEntity(id = "order-42", userId = "user-Z")
-        `when`(orderRepository.findById("order-42")).thenReturn(Optional.of(entity))
+        every { orderRepository.findById("order-42") } returns Optional.of(entity)
 
         val response = endpoint.getOrderById("order-42")
 
@@ -120,7 +124,7 @@ class OrderEndpointUnitTest {
 
     @Test
     fun `getOrderById should return 404 when order does not exist`() {
-        `when`(orderRepository.findById("missing")).thenReturn(Optional.empty())
+        every { orderRepository.findById("missing") } returns Optional.empty()
 
         val response = endpoint.getOrderById("missing")
 
@@ -132,7 +136,7 @@ class OrderEndpointUnitTest {
     fun `getOrderById should map timestamp to UTC OffsetDateTime`() {
         val instant = Instant.parse("2024-06-15T12:00:00Z")
         val entity = orderEntity(id = "t-order", timestamp = instant)
-        `when`(orderRepository.findById("t-order")).thenReturn(Optional.of(entity))
+        every { orderRepository.findById("t-order") } returns Optional.of(entity)
 
         val dto = endpoint.getOrderById("t-order").body!!
         assertThat(dto.timestamp.toInstant()).isEqualTo(instant)

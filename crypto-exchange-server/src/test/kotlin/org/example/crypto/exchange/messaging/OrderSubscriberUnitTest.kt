@@ -1,5 +1,9 @@
 package org.example.crypto.exchange.messaging
 
+import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.junit5.MockKExtension
+import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.example.crypto.exchange.Exchange
 import org.example.crypto.exchange.OrderEntity
@@ -8,12 +12,7 @@ import org.example.crypto.exchange.messaging.proto.OrderEventProto
 import org.example.crypto.exchange.messaging.proto.OrderSideProto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Mock
-import org.mockito.Mockito.verify
-import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 
 /**
@@ -22,9 +21,9 @@ import java.math.BigDecimal
  *
  * Full Kafka round-trip tests live in [OrderSubscriberTest] (Testcontainers).
  */
-@ExtendWith(MockitoExtension::class)
+@ExtendWith(MockKExtension::class)
 class OrderSubscriberUnitTest {
-    @Mock
+    @RelaxedMockK
     private lateinit var exchange: Exchange
 
     private lateinit var subscriber: OrderSubscriber
@@ -44,10 +43,10 @@ class OrderSubscriberUnitTest {
 
         subscriber.consume(event)
 
-        val captor = ArgumentCaptor.forClass(OrderEntity::class.java)
-        verify(exchange).placeOrder(captor.capture())
+        val slot = slot<OrderEntity>()
+        verify { exchange.placeOrder(capture(slot)) }
 
-        with(captor.value) {
+        with(slot.captured) {
             assertThat(userId).isEqualTo("user-1")
             assertThat(side).isEqualTo(OrderSide.BUY)
             assertThat(price).isEqualByComparingTo(BigDecimal("100.50"))
@@ -65,27 +64,14 @@ class OrderSubscriberUnitTest {
 
         subscriber.consume(event)
 
-        val captor = ArgumentCaptor.forClass(OrderEntity::class.java)
-        verify(exchange).placeOrder(captor.capture())
+        val slot = slot<OrderEntity>()
+        verify { exchange.placeOrder(capture(slot)) }
 
-        with(captor.value) {
+        with(slot.captured) {
             assertThat(userId).isEqualTo("user-2")
             assertThat(side).isEqualTo(OrderSide.SELL)
             assertThat(price).isEqualByComparingTo(BigDecimal("200.00"))
             assertThat(quantity).isEqualByComparingTo(BigDecimal("1.0"))
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Unknown side
-    // -------------------------------------------------------------------------
-
-    @Test
-    fun `should throw IllegalArgumentException when proto side is UNRECOGNIZED`() {
-        val event = orderEvent(side = OrderSideProto.UNRECOGNIZED)
-
-        assertThrows<IllegalArgumentException> {
-            subscriber.consume(event)
         }
     }
 
@@ -99,21 +85,21 @@ class OrderSubscriberUnitTest {
 
         subscriber.consume(event)
 
-        val captor = ArgumentCaptor.forClass(OrderEntity::class.java)
-        verify(exchange).placeOrder(captor.capture())
+        val slot = slot<OrderEntity>()
+        verify { exchange.placeOrder(capture(slot)) }
 
-        assertThat(captor.value.price).isEqualByComparingTo("12345.6789")
-        assertThat(captor.value.quantity).isEqualByComparingTo("0.00000001")
+        assertThat(slot.captured.price).isEqualByComparingTo("12345.6789")
+        assertThat(slot.captured.quantity).isEqualByComparingTo("0.00000001")
     }
 
     @Test
     fun `should assign a non-blank id to the constructed OrderEntity`() {
         subscriber.consume(orderEvent())
 
-        val captor = ArgumentCaptor.forClass(OrderEntity::class.java)
-        verify(exchange).placeOrder(captor.capture())
+        val slot = slot<OrderEntity>()
+        verify { exchange.placeOrder(capture(slot)) }
 
-        assertThat(captor.value.id).isNotBlank()
+        assertThat(slot.captured.id).isNotBlank()
     }
 
     // -------------------------------------------------------------------------

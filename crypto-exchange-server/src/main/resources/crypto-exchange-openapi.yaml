@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-- url: http://localhost:49234
+- url: http://localhost:63688
   description: Generated server url
 paths:
   /api/trades:

@@ -1,5 +1,9 @@
 package org.example.crypto.exchange.generator
 
+import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.junit5.MockKExtension
+import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.example.crypto.exchange.messaging.proto.OrderEventProto
 import org.example.crypto.exchange.messaging.proto.OrderSideProto
@@ -8,11 +12,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Mock
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 
 /**
@@ -21,9 +20,9 @@ import java.math.BigDecimal
  * Verifies that generated events respect configured bounds and that
  * the enabled flag is honoured — no Spring context, no Kafka.
  */
-@ExtendWith(MockitoExtension::class)
+@ExtendWith(MockKExtension::class)
 class OrderGeneratorServiceTest {
-    @Mock
+    @RelaxedMockK
     private lateinit var publisher: OrderPublisher
 
     private val defaultProps =
@@ -51,14 +50,14 @@ class OrderGeneratorServiceTest {
 
         disabledService.generateAndPublish()
 
-        verify(publisher, never()).publish(any())
+        verify(exactly = 0) { publisher.publish(any()) }
     }
 
     @Test
     fun `should publish exactly one event when enabled`() {
         service.generateAndPublish()
 
-        verify(publisher).publish(any())
+        verify(exactly = 1) { publisher.publish(any()) }
     }
 
     @RepeatedTest(20)
@@ -107,13 +106,8 @@ class OrderGeneratorServiceTest {
     // -------------------------------------------------------------------------
 
     private fun capturePublishedEvent(): OrderEventProto {
-        val captor = ArgumentCaptor.forClass(OrderEventProto::class.java)
-        // capture() returns null (Mockito side-effect mechanism); the ?: fallback satisfies
-        // Kotlin's non-null check at the call site without affecting what Mockito captures.
-        verify(publisher).publish(captor.capture() ?: OrderEventProto.getDefaultInstance())
-        return captor.value
+        val slot = slot<OrderEventProto>()
+        verify { publisher.publish(capture(slot)) }
+        return slot.captured
     }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <T> any(): T = org.mockito.Mockito.any<T>() as T
 }

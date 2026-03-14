@@ -1,31 +1,30 @@
 package org.example.crypto.exchange
 
+import io.mockk.every
+import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.junit5.MockKExtension
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 
 /**
- * Fast unit tests for [Exchange] business logic using Mockito mocks.
+ * Fast unit tests for [Exchange] business logic using MockK mocks.
  *
  * These do NOT spin up a Spring context or a database — the goal is to verify
  * the matching engine logic in isolation.
  *
  * Integration/persistence tests live in [ExchangeTest] (Testcontainers).
  */
-@ExtendWith(MockitoExtension::class)
+@ExtendWith(MockKExtension::class)
 class ExchangeUnitTest {
-    @Mock
+    @RelaxedMockK
     private lateinit var orderRepository: OrderRepository
 
-    @Mock
+    @RelaxedMockK
     private lateinit var tradeRepository: TradeRepository
 
     private lateinit var exchange: Exchange
@@ -33,7 +32,9 @@ class ExchangeUnitTest {
     @BeforeEach
     fun setUp() {
         // findAll() during @PostConstruct init() — return empty list by default
-        `when`(orderRepository.findAll()).thenReturn(emptyList())
+        every { orderRepository.findAll() } returns emptyList()
+        // save() has a generic return type <S: OrderEntity> — stub it to return the argument
+        every { orderRepository.save(any()) } answers { firstArg() }
         exchange = Exchange(orderRepository, tradeRepository)
         exchange.init()
     }
@@ -260,13 +261,13 @@ class ExchangeUnitTest {
         @Test
         fun `clear should delegate to tradeRepository deleteAll`() {
             exchange.clear()
-            verify(tradeRepository).deleteAll()
+            verify { tradeRepository.deleteAll() }
         }
 
         @Test
         fun `clear should delegate to orderRepository deleteAll`() {
             exchange.clear()
-            verify(orderRepository).deleteAll()
+            verify { orderRepository.deleteAll() }
         }
     }
 
@@ -279,7 +280,7 @@ class ExchangeUnitTest {
         @Test
         fun `init should load unfilled orders into the order book`() {
             val unfilled = buyOrder(price = "100", qty = "1.0")
-            `when`(orderRepository.findAll()).thenReturn(listOf(unfilled))
+            every { orderRepository.findAll() } returns listOf(unfilled)
 
             val freshExchange = Exchange(orderRepository, tradeRepository)
             freshExchange.init()
@@ -290,7 +291,7 @@ class ExchangeUnitTest {
         @Test
         fun `init should skip fully filled orders`() {
             val filled = buyOrder(price = "100", qty = "1.0", remainingQty = BigDecimal.ZERO)
-            `when`(orderRepository.findAll()).thenReturn(listOf(filled))
+            every { orderRepository.findAll() } returns listOf(filled)
 
             val freshExchange = Exchange(orderRepository, tradeRepository)
             freshExchange.init()
@@ -308,12 +309,7 @@ class ExchangeUnitTest {
         val order = buyOrder(price = "100", qty = "1.0")
         exchange.placeOrder(order)
 
-        val captor = ArgumentCaptor.forClass(OrderEntity::class.java)
-        verify(orderRepository).save(captor.capture())
-        // The last save should reflect the incoming order
-        assertThat(captor.allValues).anySatisfy { saved ->
-            assertThat(saved.id).isEqualTo(order.id)
-        }
+        verify(atLeast = 1) { orderRepository.save(order) }
     }
 
     @Test
@@ -322,10 +318,7 @@ class ExchangeUnitTest {
         val buyOrder = buyOrder(price = "100", qty = "1.0")
         exchange.placeOrder(buyOrder)
 
-        val captor = ArgumentCaptor.forClass(List::class.java)
-        @Suppress("UNCHECKED_CAST")
-        verify(tradeRepository).saveAll(captor.capture() as List<TradeEntity>)
-        assertThat(captor.value).hasSize(1)
+        verify { tradeRepository.saveAll(match<List<TradeEntity>> { it.size == 1 }) }
     }
 
     // -------------------------------------------------------------------------
