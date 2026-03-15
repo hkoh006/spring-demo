@@ -39,8 +39,8 @@ async function fetchMarketAnalytics(): Promise<MarketAnalytics | null> {
 export default async function Home() {
     const [orders, trades, analytics] = await Promise.all([fetchOrders(), fetchTrades(), fetchMarketAnalytics()]);
 
-    const openOrders = orders.filter(o => !o.isFilled).length;
-    const filledOrders = orders.filter(o => o.isFilled).length;
+    const openOrders = orders.filter(o => o.status === 'OPEN' || o.status === 'PARTIALLY_FILLED').length;
+    const filledOrders = orders.filter(o => o.status === 'FILLED').length;
     const buyOrders = orders.filter(o => o.side === 'BUY').length;
     const sellOrders = orders.filter(o => o.side === 'SELL').length;
 
