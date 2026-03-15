@@ -162,6 +162,7 @@ components:
           enum:
           - OPEN
           - PARTIALLY_FILLED
+          - PARTIALLY_FILLED_CANCELLED
           - CANCELLED
           - FILLED
       required:

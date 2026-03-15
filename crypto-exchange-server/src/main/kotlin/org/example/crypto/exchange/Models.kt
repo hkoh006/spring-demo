@@ -18,6 +18,7 @@ enum class OrderSide {
 enum class OrderStatus {
     OPEN,
     PARTIALLY_FILLED,
+    PARTIALLY_FILLED_CANCELLED,
     CANCELLED,
     FILLED,
 }

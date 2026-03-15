@@ -10,6 +10,7 @@ import org.example.crypto.exchange.OrderStatus.CANCELLED
 import org.example.crypto.exchange.OrderStatus.FILLED
 import org.example.crypto.exchange.OrderStatus.OPEN
 import org.example.crypto.exchange.OrderStatus.PARTIALLY_FILLED
+import org.example.crypto.exchange.OrderStatus.PARTIALLY_FILLED_CANCELLED
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -314,6 +315,19 @@ class ExchangeUnitTest {
             exchange.cancelOrder(order.id)
 
             verify { orderRepository.save(match<OrderEntity> { it.id == order.id && it.status == CANCELLED }) }
+        }
+
+        @Test
+        fun `cancelOrder on a partially filled order should mark it PARTIALLY_FILLED_CANCELLED`() {
+            // Resting sell: qty 5, incoming buy: qty 2 → sell is partially filled (3 remaining)
+            val sell = sellOrder(userId = "alice", price = "100", qty = "5.0")
+            exchange.placeOrder(sell)
+            val buy = buyOrder(userId = "bob", price = "100", qty = "2.0")
+            exchange.placeOrder(buy)
+
+            val cancelled = exchange.cancelOrder(sell.id)
+
+            assertThat(cancelled!!.status).isEqualTo(PARTIALLY_FILLED_CANCELLED)
         }
     }
 

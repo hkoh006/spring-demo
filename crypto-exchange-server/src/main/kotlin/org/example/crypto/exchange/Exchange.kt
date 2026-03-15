@@ -150,7 +150,7 @@ class Exchange(
     fun cancelOrder(orderId: String): OrderEntity? {
         val order = orderBook.findById(orderId) ?: return null
         orderBook.removeOrder(order)
-        order.status = OrderStatus.CANCELLED
+        order.status = if (order.remainingQuantity < order.quantity) OrderStatus.PARTIALLY_FILLED_CANCELLED else OrderStatus.CANCELLED
         orderRepository.save(order)
         return order
     }

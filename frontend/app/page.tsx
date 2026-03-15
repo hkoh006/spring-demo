@@ -40,6 +40,7 @@ export default async function Home() {
     const [orders, trades, analytics] = await Promise.all([fetchOrders(), fetchTrades(), fetchMarketAnalytics()]);
 
     const openOrders = orders.filter(o => o.status === 'OPEN' || o.status === 'PARTIALLY_FILLED').length;
+    const cancelledOrders = orders.filter(o => o.status === 'CANCELLED' || o.status === 'PARTIALLY_FILLED_CANCELLED').length;
     const filledOrders = orders.filter(o => o.status === 'FILLED').length;
     const buyOrders = orders.filter(o => o.side === 'BUY').length;
     const sellOrders = orders.filter(o => o.side === 'SELL').length;
@@ -135,7 +136,7 @@ export interface MarketAnalytics {
     bestAsk?: number;
 }
 
-export type OrderStatus = 'OPEN' | 'PARTIALLY_FILLED' | 'CANCELLED' | 'FILLED';
+export type OrderStatus = 'OPEN' | 'PARTIALLY_FILLED' | 'PARTIALLY_FILLED_CANCELLED' | 'CANCELLED' | 'FILLED';
 
 export interface Order {
     id: string;

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Order, OrderStatus, Trade } from "@/app/page";
 
-const ALL_STATUSES: OrderStatus[] = ['OPEN', 'PARTIALLY_FILLED', 'FILLED', 'CANCELLED'];
+const ALL_STATUSES: OrderStatus[] = ['OPEN', 'PARTIALLY_FILLED', 'PARTIALLY_FILLED_CANCELLED', 'FILLED', 'CANCELLED'];
 
 function shortId(id: string) {
     return id.slice(0, 8);
@@ -173,16 +173,18 @@ function SideBadge({ side }: { side: 'BUY' | 'SELL' }) {
 
 function StatusBadge({ status }: { status: OrderStatus }) {
     const styles: Record<OrderStatus, string> = {
-        OPEN:             'bg-amber-500/10 text-amber-400 border-amber-500/20',
-        PARTIALLY_FILLED: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
-        FILLED:           'bg-zinc-700/50 text-zinc-400 border-zinc-700',
-        CANCELLED:        'bg-rose-500/10 text-rose-400 border-rose-500/20',
+        OPEN:                       'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        PARTIALLY_FILLED:           'bg-sky-500/10 text-sky-400 border-sky-500/20',
+        PARTIALLY_FILLED_CANCELLED: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+        FILLED:                     'bg-zinc-700/50 text-zinc-400 border-zinc-700',
+        CANCELLED:                  'bg-rose-500/10 text-rose-400 border-rose-500/20',
     };
     const labels: Record<OrderStatus, string> = {
-        OPEN:             'OPEN',
-        PARTIALLY_FILLED: 'PARTIAL',
-        FILLED:           'FILLED',
-        CANCELLED:        'CANCELLED',
+        OPEN:                       'OPEN',
+        PARTIALLY_FILLED:           'PARTIAL',
+        PARTIALLY_FILLED_CANCELLED: 'PARTIAL CANCEL',
+        FILLED:                     'FILLED',
+        CANCELLED:                  'CANCELLED',
     };
     return (
         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${styles[status]}`}>
@@ -198,13 +200,14 @@ function StatusFilterButton({ status, active, count, onClick }: {
     onClick: () => void;
 }) {
     const activeStyles: Record<OrderStatus, string> = {
-        OPEN:             'bg-amber-500/15 text-amber-400 border-amber-500/30',
-        PARTIALLY_FILLED: 'bg-sky-500/15 text-sky-400 border-sky-500/30',
-        FILLED:           'bg-zinc-700/60 text-zinc-300 border-zinc-600',
-        CANCELLED:        'bg-rose-500/15 text-rose-400 border-rose-500/30',
+        OPEN:                       'bg-amber-500/15 text-amber-400 border-amber-500/30',
+        PARTIALLY_FILLED:           'bg-sky-500/15 text-sky-400 border-sky-500/30',
+        PARTIALLY_FILLED_CANCELLED: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+        FILLED:                     'bg-zinc-700/60 text-zinc-300 border-zinc-600',
+        CANCELLED:                  'bg-rose-500/15 text-rose-400 border-rose-500/30',
     };
     const labels: Record<OrderStatus, string> = {
-        OPEN: 'Open', PARTIALLY_FILLED: 'Partial', FILLED: 'Filled', CANCELLED: 'Cancelled',
+        OPEN: 'Open', PARTIALLY_FILLED: 'Partial', PARTIALLY_FILLED_CANCELLED: 'Partial Cancel', FILLED: 'Filled', CANCELLED: 'Cancelled',
     };
     return (
         <button
