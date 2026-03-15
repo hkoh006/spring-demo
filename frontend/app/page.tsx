@@ -24,14 +24,24 @@ async function fetchTrades(): Promise<Trade[]> {
     }
 }
 
+async function fetchMarketAnalytics(): Promise<MarketAnalytics | null> {
+    try {
+        const response = await fetch('http://localhost:8080/api/market/analytics', { cache: 'no-store' });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (e) {
+        console.error("Failed to fetch market analytics", e);
+        return null;
+    }
+}
+
 export default async function Home() {
-    const [orders, trades] = await Promise.all([fetchOrders(), fetchTrades()]);
+    const [orders, trades, analytics] = await Promise.all([fetchOrders(), fetchTrades(), fetchMarketAnalytics()]);
 
     const openOrders = orders.filter(o => !o.isFilled).length;
     const filledOrders = orders.filter(o => o.isFilled).length;
     const buyOrders = orders.filter(o => o.side === 'BUY').length;
     const sellOrders = orders.filter(o => o.side === 'SELL').length;
-    const tradeVolume = trades.reduce((sum, t) => sum + Number(t.quantity), 0);
 
     return (
         <div className="min-h-screen bg-[#09090f] text-slate-200">
@@ -56,14 +66,29 @@ export default async function Home() {
 
             <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
 
-                {/* Stats row */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <StatCard label="Total Orders" value={orders.length} />
-                    <StatCard label="Open" value={openOrders} valueClass="text-amber-400" />
-                    <StatCard label="Filled" value={filledOrders} valueClass="text-zinc-400" />
-                    <StatCard label="Buys" value={buyOrders} valueClass="text-emerald-400" />
-                    <StatCard label="Sells" value={sellOrders} valueClass="text-rose-400" />
-                    <StatCard label="Trade Volume" value={tradeVolume.toFixed(2)} valueClass="text-sky-400" />
+                {/* Market Overview */}
+                <div>
+                    <p className="text-xs text-zinc-600 uppercase tracking-widest mb-2 px-1">Market Overview · 24h</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                        <StatCard label="Last Price" value={analytics?.lastPrice != null ? `$${Number(analytics.lastPrice).toFixed(2)}` : '—'} valueClass="text-yellow-400" />
+                        <StatCard label="24h High" value={analytics?.high != null ? `$${Number(analytics.high).toFixed(2)}` : '—'} valueClass="text-emerald-400" />
+                        <StatCard label="24h Low" value={analytics?.low != null ? `$${Number(analytics.low).toFixed(2)}` : '—'} valueClass="text-rose-400" />
+                        <StatCard label="24h Volume" value={Number(analytics?.volume ?? 0).toFixed(2)} valueClass="text-sky-400" />
+                        <StatCard label="Best Bid" value={analytics?.bestBid != null ? `$${Number(analytics.bestBid).toFixed(2)}` : '—'} valueClass="text-emerald-300" />
+                        <StatCard label="Best Ask" value={analytics?.bestAsk != null ? `$${Number(analytics.bestAsk).toFixed(2)}` : '—'} valueClass="text-rose-300" />
+                    </div>
+                </div>
+
+                {/* Order Stats */}
+                <div>
+                    <p className="text-xs text-zinc-600 uppercase tracking-widest mb-2 px-1">Order Stats</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                        <StatCard label="Total Orders" value={orders.length} />
+                        <StatCard label="Open" value={openOrders} valueClass="text-amber-400" />
+                        <StatCard label="Filled" value={filledOrders} valueClass="text-zinc-400" />
+                        <StatCard label="Buys" value={buyOrders} valueClass="text-emerald-400" />
+                        <StatCard label="Sells" value={sellOrders} valueClass="text-rose-400" />
+                    </div>
                 </div>
 
                 {/* Tables */}
@@ -95,6 +120,15 @@ function LoadingCard() {
             Loading…
         </div>
     );
+}
+
+export interface MarketAnalytics {
+    volume: number;
+    high?: number;
+    low?: number;
+    lastPrice?: number;
+    bestBid?: number;
+    bestAsk?: number;
 }
 
 export interface Order {

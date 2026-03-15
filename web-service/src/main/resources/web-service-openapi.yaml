@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-- url: http://localhost:63648
+- url: http://localhost:65244
   description: Generated server url
 paths:
   /api/v1/orders/{id}:
