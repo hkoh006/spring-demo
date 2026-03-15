@@ -18,12 +18,15 @@ class Exchange(
 
     @PostConstruct
     fun init() {
-        // Load existing orders from database to initialize the order book
         val existingOrders = orderRepository.findAll()
+        // Repair any stale statuses (e.g. filled orders saved before status tracking was added)
+        val stale = existingOrders.filter { it.isFilled() && it.status == OrderStatus.OPEN }
+        if (stale.isNotEmpty()) {
+            stale.forEach { it.status = OrderStatus.FILLED }
+            orderRepository.saveAll(stale)
+        }
         existingOrders.forEach {
-            if (!it.isFilled()) {
-                orderBook.addOrder(it)
-            }
+            if (!it.isFilled()) orderBook.addOrder(it)
         }
     }
 
@@ -50,17 +53,13 @@ class Exchange(
             order.remainingQuantity < order.quantity -> OrderStatus.PARTIALLY_FILLED
             else -> OrderStatus.OPEN
         }
+        orderRepository.save(order)
 
         if (!order.isFilled() && !wouldCross(order)) {
             orderBook.addOrder(order)
         }
 
-        // Save trades and updated orders
         tradeRepository.saveAll(trades)
-        // Order is updated in match methods (remainingQuantity), but we must save it if matched
-        // Actually, if it's an entity, the changes might be flushed automatically by Transactional,
-        // but we explicitly saved it once, and we should ensure matched existing orders are also updated.
-        // We'll explicitly save the orders to be sure.
         return trades
     }
 
@@ -99,8 +98,6 @@ class Exchange(
                 break // No more matching asks
             }
         }
-        // Save the incoming order after matching
-        orderRepository.save(buyOrder)
     }
 
     private fun matchSellOrder(
@@ -138,8 +135,6 @@ class Exchange(
                 break // No more matching bids
             }
         }
-        // Save the incoming order after matching
-        orderRepository.save(sellOrder)
     }
 
     private fun wouldCross(order: OrderEntity): Boolean =
@@ -181,6 +176,7 @@ class Exchange(
             order.remainingQuantity < order.quantity -> OrderStatus.PARTIALLY_FILLED
             else -> OrderStatus.OPEN
         }
+        orderRepository.save(order)
         if (!order.isFilled() && !wouldCross(order)) orderBook.addOrder(order)
         tradeRepository.saveAll(trades)
         return order
