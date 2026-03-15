@@ -5,6 +5,11 @@ import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.example.crypto.exchange.OrderStatus.CANCELLED
+import org.example.crypto.exchange.OrderStatus.FILLED
+import org.example.crypto.exchange.OrderStatus.OPEN
+import org.example.crypto.exchange.OrderStatus.PARTIALLY_FILLED
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -242,47 +247,176 @@ class ExchangeUnitTest {
     }
 
     // -------------------------------------------------------------------------
-    // Self-trade prevention
+    // One-active-order-per-user enforcement
     // -------------------------------------------------------------------------
 
     @Nested
-    inner class SelfTradePrevention {
+    inner class OneActiveOrderPerUser {
         @Test
-        fun `buy order should not match against same user's resting sell`() {
-            exchange.placeOrder(sellOrder(userId = "user1", price = "100", qty = "1.0"))
-            val trades = exchange.placeOrder(buyOrder(userId = "user1", price = "100", qty = "1.0"))
+        fun `placing a second order while one is active should throw`() {
+            exchange.placeOrder(sellOrder(userId = "alice", price = "100", qty = "1.0"))
 
-            assertThat(trades).isEmpty()
+            assertThatThrownBy {
+                exchange.placeOrder(sellOrder(userId = "alice", price = "99", qty = "1.0"))
+            }.isInstanceOf(UserAlreadyHasActiveOrderException::class.java)
         }
 
         @Test
-        fun `sell order should not match against same user's resting buy`() {
-            exchange.placeOrder(buyOrder(userId = "user1", price = "100", qty = "1.0"))
-            val trades = exchange.placeOrder(sellOrder(userId = "user1", price = "100", qty = "1.0"))
+        fun `user can place a new order after their previous order is fully filled`() {
+            exchange.placeOrder(sellOrder(userId = "alice", price = "100", qty = "1.0"))
+            exchange.placeOrder(buyOrder(userId = "bob", price = "100", qty = "1.0")) // fills alice's order
 
-            assertThat(trades).isEmpty()
+            // alice's order is now filled and removed from the book — she can place a new one
+            exchange.placeOrder(sellOrder(userId = "alice", price = "100", qty = "1.0"))
+            // bob is filled too, so this new sell stays in the book
+            assertThat(exchange.getOrderBook().asks).hasSize(1)
         }
 
         @Test
-        fun `buy order should skip same-user ask and match a different user's ask`() {
-            exchange.placeOrder(sellOrder(userId = "user1", price = "100", qty = "1.0"))
-            exchange.placeOrder(sellOrder(userId = "user2", price = "101", qty = "1.0"))
+        fun `user can place a new order after cancelling their active order`() {
+            val order = sellOrder(userId = "alice", price = "100", qty = "1.0")
+            exchange.placeOrder(order)
+            exchange.cancelOrder(order.id)
 
-            val trades = exchange.placeOrder(buyOrder(userId = "user1", price = "105", qty = "1.0"))
+            // No exception expected
+            exchange.placeOrder(sellOrder(userId = "alice", price = "105", qty = "2.0"))
+            assertThat(exchange.getOrderBook().asks).hasSize(1)
+        }
+    }
 
-            assertThat(trades).hasSize(1)
-            assertThat(trades[0].sellerId).isEqualTo("user2")
+    // -------------------------------------------------------------------------
+    // Cancel order
+    // -------------------------------------------------------------------------
+
+    @Nested
+    inner class CancelOrder {
+        @Test
+        fun `cancelOrder should remove the order from the book and mark it CANCELLED`() {
+            val order = sellOrder(userId = "alice", price = "100", qty = "1.0")
+            exchange.placeOrder(order)
+
+            val cancelled = exchange.cancelOrder(order.id)
+
+            assertThat(cancelled).isNotNull
+            assertThat(cancelled!!.status).isEqualTo(CANCELLED)
+            assertThat(exchange.getOrderBook().asks).isEmpty()
         }
 
         @Test
-        fun `sell order should skip same-user bid and match a different user's bid`() {
-            exchange.placeOrder(buyOrder(userId = "user1", price = "100", qty = "1.0"))
-            exchange.placeOrder(buyOrder(userId = "user2", price = "99", qty = "1.0"))
+        fun `cancelOrder should return null for an unknown id`() {
+            assertThat(exchange.cancelOrder("non-existent")).isNull()
+        }
 
-            val trades = exchange.placeOrder(sellOrder(userId = "user1", price = "95", qty = "1.0"))
+        @Test
+        fun `cancelOrder should persist CANCELLED status`() {
+            val order = sellOrder(userId = "alice", price = "100", qty = "1.0")
+            exchange.placeOrder(order)
+            exchange.cancelOrder(order.id)
 
-            assertThat(trades).hasSize(1)
-            assertThat(trades[0].buyerId).isEqualTo("user2")
+            verify { orderRepository.save(match<OrderEntity> { it.id == order.id && it.status == CANCELLED }) }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Amend order
+    // -------------------------------------------------------------------------
+
+    @Nested
+    inner class AmendOrder {
+        @Test
+        fun `amendOrder should update price and quantity in the book`() {
+            val order = sellOrder(userId = "alice", price = "100", qty = "1.0")
+            exchange.placeOrder(order)
+
+            val amended = exchange.amendOrder(order.id, BigDecimal("105"), BigDecimal("2.0"))
+
+            assertThat(amended).isNotNull
+            assertThat(amended!!.price).isEqualByComparingTo("105")
+            assertThat(amended.quantity).isEqualByComparingTo("2.0")
+            assertThat(amended.remainingQuantity).isEqualByComparingTo("2.0")
+            assertThat(amended.status).isEqualTo(OPEN)
+        }
+
+        @Test
+        fun `amendOrder should keep the order in the book at the new price`() {
+            val order = sellOrder(userId = "alice", price = "100", qty = "1.0")
+            exchange.placeOrder(order)
+            exchange.amendOrder(order.id, BigDecimal("110"), BigDecimal("1.0"))
+
+            assertThat(exchange.getOrderBook().asks).hasSize(1)
+            assertThat(exchange.getOrderBook().asks.first().price).isEqualByComparingTo("110")
+        }
+
+        @Test
+        fun `amendOrder should return null for an unknown id`() {
+            assertThat(exchange.amendOrder("non-existent", BigDecimal("100"), BigDecimal("1.0"))).isNull()
+        }
+
+        @Test
+        fun `amended order that now crosses should match immediately`() {
+            // bob has a buy at 100 in the book
+            exchange.placeOrder(buyOrder(userId = "bob", price = "100", qty = "1.0"))
+            // alice places a sell at 110 (no match)
+            val aliceSell = sellOrder(userId = "alice", price = "110", qty = "1.0")
+            exchange.placeOrder(aliceSell)
+
+            // alice amends price down to 99 — now crosses bob's bid
+            exchange.amendOrder(aliceSell.id, BigDecimal("99"), BigDecimal("1.0"))
+
+            // After amend the order is re-placed and should match bob's bid
+            assertThat(exchange.getOrderBook().asks).isEmpty()
+            assertThat(exchange.getOrderBook().bids).isEmpty()
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Order status tracking
+    // -------------------------------------------------------------------------
+
+    @Nested
+    inner class OrderStatusTracking {
+        @Test
+        fun `unfilled resting order should have OPEN status`() {
+            val order = buyOrder(price = "100", qty = "1.0")
+            exchange.placeOrder(order)
+
+            assertThat(order.status).isEqualTo(OPEN)
+        }
+
+        @Test
+        fun `fully filled incoming order should have FILLED status`() {
+            exchange.placeOrder(sellOrder(price = "100", qty = "1.0"))
+            val buy = buyOrder(price = "100", qty = "1.0")
+            exchange.placeOrder(buy)
+
+            assertThat(buy.status).isEqualTo(FILLED)
+        }
+
+        @Test
+        fun `partially filled incoming order should have PARTIALLY_FILLED status`() {
+            exchange.placeOrder(sellOrder(price = "100", qty = "0.5"))
+            val buy = buyOrder(price = "100", qty = "1.0")
+            exchange.placeOrder(buy)
+
+            assertThat(buy.status).isEqualTo(PARTIALLY_FILLED)
+        }
+
+        @Test
+        fun `resting order that gets fully consumed should have FILLED status`() {
+            val resting = sellOrder(price = "100", qty = "1.0")
+            exchange.placeOrder(resting)
+            exchange.placeOrder(buyOrder(price = "100", qty = "1.0"))
+
+            assertThat(resting.status).isEqualTo(FILLED)
+        }
+
+        @Test
+        fun `resting order that gets partially consumed should have PARTIALLY_FILLED status`() {
+            val resting = sellOrder(price = "100", qty = "2.0")
+            exchange.placeOrder(resting)
+            exchange.placeOrder(buyOrder(price = "100", qty = "1.0"))
+
+            assertThat(resting.status).isEqualTo(PARTIALLY_FILLED)
         }
     }
 

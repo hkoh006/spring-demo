@@ -45,15 +45,13 @@ class ExchangeChaosTest {
                     quantity = quantity,
                 )
 
-            if (side == OrderSide.BUY) {
-                totalBuyQuantity += quantity
-            } else {
-                totalSellQuantity += quantity
-            }
-
-            val trades = exchange.placeOrder(order)
-            trades.forEach { trade ->
-                executedTradeQuantity += trade.quantity
+            try {
+                val trades = exchange.placeOrder(order)
+                // Only count accepted orders toward totals
+                if (side == OrderSide.BUY) totalBuyQuantity += quantity else totalSellQuantity += quantity
+                trades.forEach { trade -> executedTradeQuantity += trade.quantity }
+            } catch (_: UserAlreadyHasActiveOrderException) {
+                // User already has an active order — skip silently, don't count quantity
             }
 
             // Invariant 1: Order book should never have crossing prices

@@ -3,9 +3,67 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-- url: http://localhost:65284
+- url: http://localhost:54851
   description: Generated server url
 paths:
+  /api/orders/{id}:
+    get:
+      tags:
+      - order-endpoint
+      operationId: getOrderById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDto"
+    delete:
+      tags:
+      - order-endpoint
+      operationId: cancelOrder
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDto"
+    patch:
+      tags:
+      - order-endpoint
+      operationId: amendOrder
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmendOrderRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDto"
   /api/trades:
     get:
       tags:
@@ -52,24 +110,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/OrderDto"
-  /api/orders/{id}:
-    get:
-      tags:
-      - order-endpoint
-      operationId: getOrderById
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OrderDto"
   /api/market/analytics:
     get:
       tags:
@@ -84,29 +124,16 @@ paths:
                 $ref: "#/components/schemas/MarketAnalyticsDto"
 components:
   schemas:
-    TradeDto:
+    AmendOrderRequest:
       type: object
       properties:
-        id:
-          type: string
-        buyerId:
-          type: string
-        sellerId:
-          type: string
         price:
           type: number
         quantity:
           type: number
-        timestamp:
-          type: string
-          format: date-time
       required:
-      - buyerId
-      - id
       - price
       - quantity
-      - sellerId
-      - timestamp
     OrderDto:
       type: object
       properties:
@@ -130,6 +157,13 @@ components:
           format: date-time
         isFilled:
           type: boolean
+        status:
+          type: string
+          enum:
+          - OPEN
+          - PARTIALLY_FILLED
+          - CANCELLED
+          - FILLED
       required:
       - id
       - isFilled
@@ -137,8 +171,32 @@ components:
       - quantity
       - remainingQuantity
       - side
+      - status
       - timestamp
       - userId
+    TradeDto:
+      type: object
+      properties:
+        id:
+          type: string
+        buyerId:
+          type: string
+        sellerId:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+      required:
+      - buyerId
+      - id
+      - price
+      - quantity
+      - sellerId
+      - timestamp
     MarketAnalyticsDto:
       type: object
       properties:

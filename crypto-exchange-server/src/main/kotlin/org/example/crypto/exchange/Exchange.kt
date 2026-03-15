@@ -3,6 +3,11 @@ package org.example.crypto.exchange
 import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
+import java.time.Instant
+
+class UserAlreadyHasActiveOrderException(userId: String) :
+    IllegalStateException("User '$userId' already has an active order in the book; cancel or amend it first")
 
 @Service
 class Exchange(
@@ -25,6 +30,10 @@ class Exchange(
     @Transactional
     @Synchronized
     fun placeOrder(order: OrderEntity): List<TradeEntity> {
+        if (orderBook.hasActiveOrderForUser(order.userId)) {
+            throw UserAlreadyHasActiveOrderException(order.userId)
+        }
+
         val trades = mutableListOf<TradeEntity>()
 
         // Persist the new order first
@@ -34,6 +43,12 @@ class Exchange(
             matchBuyOrder(order, trades)
         } else {
             matchSellOrder(order, trades)
+        }
+
+        order.status = when {
+            order.isFilled() -> OrderStatus.FILLED
+            order.remainingQuantity < order.quantity -> OrderStatus.PARTIALLY_FILLED
+            else -> OrderStatus.OPEN
         }
 
         if (!order.isFilled() && !wouldCross(order)) {
@@ -71,12 +86,14 @@ class Exchange(
 
                 buyOrder.remainingQuantity -= fillQuantity
                 ask.remainingQuantity -= fillQuantity
+                ask.status = if (ask.isFilled()) OrderStatus.FILLED else OrderStatus.PARTIALLY_FILLED
 
                 // Update the matching order in DB
                 orderRepository.save(ask)
 
                 if (ask.isFilled()) {
                     iterator.remove()
+                    orderBook.deindex(ask.id)
                 }
             } else {
                 break // No more matching asks
@@ -108,12 +125,14 @@ class Exchange(
 
                 sellOrder.remainingQuantity -= fillQuantity
                 bid.remainingQuantity -= fillQuantity
+                bid.status = if (bid.isFilled()) OrderStatus.FILLED else OrderStatus.PARTIALLY_FILLED
 
                 // Update the matching order in DB
                 orderRepository.save(bid)
 
                 if (bid.isFilled()) {
                     iterator.remove()
+                    orderBook.deindex(bid.id)
                 }
             } else {
                 break // No more matching bids
@@ -133,10 +152,45 @@ class Exchange(
 
     @Transactional
     @Synchronized
+    fun cancelOrder(orderId: String): OrderEntity? {
+        val order = orderBook.findById(orderId) ?: return null
+        orderBook.removeOrder(order)
+        order.status = OrderStatus.CANCELLED
+        orderRepository.save(order)
+        return order
+    }
+
+    @Transactional
+    @Synchronized
+    fun amendOrder(orderId: String, newPrice: BigDecimal, newQuantity: BigDecimal): OrderEntity? {
+        val order = orderBook.findById(orderId) ?: return null
+        // Remove first — price/timestamp are comparator keys, must not change while in the TreeSet
+        orderBook.removeOrder(order)
+        order.price = newPrice
+        order.quantity = newQuantity
+        order.remainingQuantity = newQuantity
+        order.timestamp = Instant.now()   // price change loses time priority
+        order.status = OrderStatus.OPEN
+        orderRepository.save(order)
+
+        // Re-run matching — the new price may now cross the opposite side
+        val trades = mutableListOf<TradeEntity>()
+        if (order.side == OrderSide.BUY) matchBuyOrder(order, trades) else matchSellOrder(order, trades)
+        order.status = when {
+            order.isFilled() -> OrderStatus.FILLED
+            order.remainingQuantity < order.quantity -> OrderStatus.PARTIALLY_FILLED
+            else -> OrderStatus.OPEN
+        }
+        if (!order.isFilled() && !wouldCross(order)) orderBook.addOrder(order)
+        tradeRepository.saveAll(trades)
+        return order
+    }
+
+    @Transactional
+    @Synchronized
     fun clear() {
         tradeRepository.deleteAll()
         orderRepository.deleteAll()
-        orderBook.bids.clear()
-        orderBook.asks.clear()
+        orderBook.clear()
     }
 }

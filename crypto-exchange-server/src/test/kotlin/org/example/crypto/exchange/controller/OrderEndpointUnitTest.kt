@@ -4,9 +4,12 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
+import org.example.crypto.exchange.Exchange
 import org.example.crypto.exchange.OrderEntity
 import org.example.crypto.exchange.OrderRepository
 import org.example.crypto.exchange.OrderSide
+import org.example.crypto.exchange.OrderStatus
+import org.example.crypto.exchange.model.AmendOrderRequest
 import org.example.crypto.exchange.model.OrderDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,11 +29,14 @@ class OrderEndpointUnitTest {
     @MockK
     private lateinit var orderRepository: OrderRepository
 
+    @MockK
+    private lateinit var exchange: Exchange
+
     private lateinit var endpoint: OrderEndpoint
 
     @BeforeEach
     fun setUp() {
-        endpoint = OrderEndpoint(orderRepository)
+        endpoint = OrderEndpoint(orderRepository, exchange)
     }
 
     // -------------------------------------------------------------------------
@@ -143,6 +149,55 @@ class OrderEndpointUnitTest {
     }
 
     // -------------------------------------------------------------------------
+    // cancelOrder
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `cancelOrder should return 200 with cancelled order when order is in the book`() {
+        val entity = orderEntity(id = "cancel-me", status = OrderStatus.CANCELLED)
+        every { exchange.cancelOrder("cancel-me") } returns entity
+
+        val response = endpoint.cancelOrder("cancel-me")
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.body!!.status).isEqualTo(OrderDto.Status.CANCELLED)
+    }
+
+    @Test
+    fun `cancelOrder should return 404 when order is not in the book`() {
+        every { exchange.cancelOrder("missing") } returns null
+
+        val response = endpoint.cancelOrder("missing")
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+    }
+
+    // -------------------------------------------------------------------------
+    // amendOrder
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `amendOrder should return 200 with updated order when order is in the book`() {
+        val amended = orderEntity(id = "amend-me", price = BigDecimal("110"), quantity = BigDecimal("2.0"))
+        every { exchange.amendOrder("amend-me", BigDecimal("110"), BigDecimal("2.0")) } returns amended
+
+        val response = endpoint.amendOrder("amend-me", AmendOrderRequest(BigDecimal("110"), BigDecimal("2.0")))
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.body!!.price).isEqualByComparingTo("110")
+        assertThat(response.body!!.quantity).isEqualByComparingTo("2.0")
+    }
+
+    @Test
+    fun `amendOrder should return 404 when order is not in the book`() {
+        every { exchange.amendOrder("missing", any(), any()) } returns null
+
+        val response = endpoint.amendOrder("missing", AmendOrderRequest(BigDecimal("100"), BigDecimal("1.0")))
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -154,6 +209,7 @@ class OrderEndpointUnitTest {
         quantity: BigDecimal = BigDecimal("1.0"),
         remainingQuantity: BigDecimal = quantity,
         timestamp: Instant = Instant.now(),
+        status: OrderStatus = OrderStatus.OPEN,
     ) = OrderEntity(
         id = id,
         userId = userId,
@@ -162,5 +218,6 @@ class OrderEndpointUnitTest {
         quantity = quantity,
         remainingQuantity = remainingQuantity,
         timestamp = timestamp,
+        status = status,
     )
 }

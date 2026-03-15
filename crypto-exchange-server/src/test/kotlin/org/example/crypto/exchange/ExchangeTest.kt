@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import java.math.BigDecimal
+import java.time.Instant
 
 @SpringBootTest(properties = ["spring.jpa.hibernate.ddl-auto=create-drop"])
 @Import(TestcontainersPostgresConfig::class)
@@ -104,5 +105,41 @@ class ExchangeTest {
 
         assertThat(trades[1].sellerId).isEqualTo("seller1") // Price 101 matched second
         assertThat(trades[1].quantity).isEqualTo(BigDecimal("0.5"))
+    }
+
+    @Test
+    fun `test time priority - older order at same price is matched first`() {
+        val t0 = Instant.ofEpochSecond(1_000_000)
+        val t1 = Instant.ofEpochSecond(2_000_000)
+
+        val olderSell = OrderEntity(
+            userId = "seller-old",
+            side = OrderSide.SELL,
+            price = BigDecimal("100"),
+            quantity = BigDecimal("1.0"),
+            timestamp = t0,
+        )
+        val newerSell = OrderEntity(
+            userId = "seller-new",
+            side = OrderSide.SELL,
+            price = BigDecimal("100"),
+            quantity = BigDecimal("1.0"),
+            timestamp = t1,
+        )
+
+        // Place newer first to ensure the TreeSet comparator — not insertion order — determines priority
+        exchange.placeOrder(newerSell)
+        exchange.placeOrder(olderSell)
+
+        val buyOrder = OrderEntity(
+            userId = "buyer",
+            side = OrderSide.BUY,
+            price = BigDecimal("100"),
+            quantity = BigDecimal("1.0"),
+        )
+        val trades = exchange.placeOrder(buyOrder)
+
+        assertThat(trades).hasSize(1)
+        assertThat(trades[0].sellerId).isEqualTo("seller-old") // Older order must be matched first
     }
 }
