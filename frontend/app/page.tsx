@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { OrderTable, TradeTable } from "@/app/ExchangeTable";
 import { AutoRefresh } from "@/app/AutoRefresh";
+import { GeneratorControl } from "@/app/GeneratorControl";
 
 async function fetchOrders(): Promise<Order[]> {
     try {
@@ -54,12 +55,15 @@ export default async function Home() {
                         <span className="text-lg font-bold tracking-tight text-white">⚡ Crypto Exchange</span>
                         <span className="text-xs text-zinc-500 font-mono">BTC/USDT</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-zinc-500">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        <span>LIVE · refreshes every 3s</span>
+                    <div className="flex items-center gap-3">
+                        <GeneratorControl />
+                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <span>LIVE · refreshes every 3s</span>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -131,6 +135,8 @@ export interface MarketAnalytics {
     bestAsk?: number;
 }
 
+export type OrderStatus = 'OPEN' | 'PARTIALLY_FILLED' | 'CANCELLED' | 'FILLED';
+
 export interface Order {
     id: string;
     userId: string;
@@ -140,6 +146,7 @@ export interface Order {
     remainingQuantity: number;
     timestamp: string;
     isFilled: boolean;
+    status: OrderStatus;
 }
 
 export interface Trade {

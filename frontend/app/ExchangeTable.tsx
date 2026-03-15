@@ -1,6 +1,6 @@
 "use client";
 
-import { Order, Trade } from "@/app/page";
+import { Order, OrderStatus, Trade } from "@/app/page";
 
 function shortId(id: string) {
     return id.slice(0, 8);
@@ -65,7 +65,7 @@ export function OrderTable({ orders }: { orders: Order[] }) {
                                         {formatNumber(order.remainingQuantity)}
                                     </td>
                                     <td className="px-4 py-2.5">
-                                        <StatusBadge filled={order.isFilled} />
+                                        <StatusBadge status={order.status} />
                                     </td>
                                     <td className="px-4 py-2.5 font-mono text-xs text-zinc-500">
                                         {formatTime(order.timestamp)}
@@ -147,8 +147,22 @@ function SideBadge({ side }: { side: 'BUY' | 'SELL' }) {
         : <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">SELL</span>;
 }
 
-function StatusBadge({ filled }: { filled: boolean }) {
-    return filled
-        ? <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-700/50 text-zinc-400 border border-zinc-700">FILLED</span>
-        : <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">OPEN</span>;
+function StatusBadge({ status }: { status: OrderStatus }) {
+    const styles: Record<OrderStatus, string> = {
+        OPEN:             'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        PARTIALLY_FILLED: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+        FILLED:           'bg-zinc-700/50 text-zinc-400 border-zinc-700',
+        CANCELLED:        'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    };
+    const labels: Record<OrderStatus, string> = {
+        OPEN:             'OPEN',
+        PARTIALLY_FILLED: 'PARTIAL',
+        FILLED:           'FILLED',
+        CANCELLED:        'CANCELLED',
+    };
+    return (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${styles[status]}`}>
+            {labels[status]}
+        </span>
+    );
 }
