@@ -9,6 +9,7 @@ dependencies {
     implementation(libs.kotlin.reflect)
     implementation(libs.spring.boot.starter)
     implementation(libs.spring.boot.starter.kafka)
+    implementation(libs.spring.boot.starter.web)
     implementation(libs.confluent.kafka.protobuf.serializer)
     implementation(libs.protobuf.java)
     implementation(libs.protobuf.kotlin)

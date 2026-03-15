@@ -16,10 +16,18 @@ enum OrderTypeProto {
   LIMIT = 1;
 }
 
+enum OrderActionProto {
+  PLACE = 0;
+  CANCEL = 1;
+  AMEND = 2;
+}
+
 message OrderEventProto {
   string user_id = 1;
   OrderSideProto side = 2;
   string price = 3;
   string quantity = 4;
   OrderTypeProto order_type = 5;
+  string order_id = 6;        // UUID assigned by the generator; exchange uses it as the entity ID
+  OrderActionProto action = 7; // defaults to PLACE (0) for backward compatibility
 }

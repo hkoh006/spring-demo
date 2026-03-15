@@ -5,10 +5,12 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.example.crypto.exchange.messaging.proto.OrderActionProto
 import org.example.crypto.exchange.messaging.proto.OrderEventProto
 import org.example.crypto.exchange.messaging.proto.OrderSideProto
 import org.example.crypto.exchange.messaging.proto.OrderTypeProto
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -37,6 +39,9 @@ class OrderGeneratorServiceTest {
             topic = "orders",
         )
 
+    // Single-user props: ensures the second generateAndPublish() acts on the same user
+    private val singleUserProps = defaultProps.copy(users = listOf("solo"))
+
     private lateinit var service: OrderGeneratorService
 
     @BeforeEach
@@ -60,45 +65,134 @@ class OrderGeneratorServiceTest {
         verify(exactly = 1) { publisher.publish(any()) }
     }
 
-    @RepeatedTest(20)
-    fun `generated userId should be from the configured user pool`() {
-        service.generateAndPublish()
+    // -------------------------------------------------------------------------
+    // PLACE — first call for a user
+    // -------------------------------------------------------------------------
 
-        assertThat(capturePublishedEvent().userId).isIn("alice", "bob")
+    @Nested
+    inner class PlaceOrder {
+        @RepeatedTest(20)
+        fun `generated userId should be from the configured user pool`() {
+            service.generateAndPublish()
+            assertThat(capturePublishedEvent().userId).isIn("alice", "bob")
+        }
+
+        @RepeatedTest(20)
+        fun `generated side should be BUY or SELL`() {
+            service.generateAndPublish()
+            assertThat(capturePublishedEvent().side).isIn(OrderSideProto.BUY, OrderSideProto.SELL)
+        }
+
+        @RepeatedTest(20)
+        fun `generated price should be within configured bounds`() {
+            service.generateAndPublish()
+            val price = BigDecimal(capturePublishedEvent().price)
+            assertThat(price)
+                .isGreaterThanOrEqualTo(defaultProps.minPrice)
+                .isLessThanOrEqualTo(defaultProps.maxPrice)
+        }
+
+        @RepeatedTest(20)
+        fun `generated quantity should be within configured bounds`() {
+            service.generateAndPublish()
+            val quantity = BigDecimal(capturePublishedEvent().quantity)
+            assertThat(quantity)
+                .isGreaterThanOrEqualTo(defaultProps.minQuantity)
+                .isLessThanOrEqualTo(defaultProps.maxQuantity)
+        }
+
+        @RepeatedTest(20)
+        fun `generated order type should be MARKET or LIMIT`() {
+            service.generateAndPublish()
+            assertThat(capturePublishedEvent().orderType).isIn(OrderTypeProto.MARKET, OrderTypeProto.LIMIT)
+        }
+
+        @Test
+        fun `PLACE event should carry a non-blank orderId`() {
+            service.generateAndPublish()
+            assertThat(capturePublishedEvent().orderId).isNotBlank()
+        }
+
+        @Test
+        fun `PLACE event should have action PLACE`() {
+            service.generateAndPublish()
+            assertThat(capturePublishedEvent().action).isEqualTo(OrderActionProto.PLACE)
+        }
+
+        @Test
+        fun `PLACE event should register the order in activeOrders`() {
+            val svc = OrderGeneratorService(publisher, singleUserProps)
+            svc.generateAndPublish()
+
+            assertThat(svc.activeOrders).containsKey("solo")
+            assertThat(svc.activeOrders["solo"]).isNotBlank()
+        }
     }
 
-    @RepeatedTest(20)
-    fun `generated side should be BUY or SELL`() {
-        service.generateAndPublish()
+    // -------------------------------------------------------------------------
+    // CANCEL / AMEND — second call for same user
+    // -------------------------------------------------------------------------
 
-        assertThat(capturePublishedEvent().side).isIn(OrderSideProto.BUY, OrderSideProto.SELL)
-    }
+    @Nested
+    inner class CancelOrAmend {
+        private lateinit var svc: OrderGeneratorService
 
-    @RepeatedTest(20)
-    fun `generated price should be within configured bounds`() {
-        service.generateAndPublish()
+        @BeforeEach
+        fun setUpSingleUser() {
+            svc = OrderGeneratorService(publisher, singleUserProps)
+            svc.generateAndPublish() // always PLACE for "solo"
+        }
 
-        val price = BigDecimal(capturePublishedEvent().price)
-        assertThat(price)
-            .isGreaterThanOrEqualTo(defaultProps.minPrice)
-            .isLessThanOrEqualTo(defaultProps.maxPrice)
-    }
+        @RepeatedTest(30)
+        fun `second call for same user should emit CANCEL or AMEND`() {
+            svc.generateAndPublish()
+            assertThat(captureLastPublishedEvent().action).isIn(OrderActionProto.CANCEL, OrderActionProto.AMEND)
+        }
 
-    @RepeatedTest(20)
-    fun `generated quantity should be within configured bounds`() {
-        service.generateAndPublish()
+        @RepeatedTest(30)
+        fun `CANCEL or AMEND event should carry the same orderId as the original PLACE`() {
+            val placeOrderId = capturePublishedEvent().orderId
 
-        val quantity = BigDecimal(capturePublishedEvent().quantity)
-        assertThat(quantity)
-            .isGreaterThanOrEqualTo(defaultProps.minQuantity)
-            .isLessThanOrEqualTo(defaultProps.maxQuantity)
-    }
+            svc.generateAndPublish()
 
-    @RepeatedTest(20)
-    fun `generated order type should be MARKET or LIMIT`() {
-        service.generateAndPublish()
+            assertThat(captureLastPublishedEvent().orderId).isEqualTo(placeOrderId)
+        }
 
-        assertThat(capturePublishedEvent().orderType).isIn(OrderTypeProto.MARKET, OrderTypeProto.LIMIT)
+        @Test
+        fun `CANCEL removes the user from activeOrders`() {
+            // Force a CANCEL by injecting state and checking outcome over many tries
+            // (Since CANCEL/AMEND is 50/50, run enough times that at least one CANCEL occurs)
+            repeat(20) {
+                if (svc.activeOrders.containsKey("solo")) svc.generateAndPublish()
+            }
+            // After enough iterations the user should eventually have been cancelled
+            // (probability of never cancelling in 20 tries = 0.5^20 ≈ 0.0001%)
+            assertThat(svc.activeOrders).doesNotContainKey("solo")
+        }
+
+        @RepeatedTest(20)
+        fun `AMEND event should carry price within configured bounds`() {
+            svc.generateAndPublish()
+            val event = captureLastPublishedEvent()
+            if (event.action == OrderActionProto.AMEND) {
+                val price = BigDecimal(event.price)
+                assertThat(price)
+                    .isGreaterThanOrEqualTo(singleUserProps.minPrice)
+                    .isLessThanOrEqualTo(singleUserProps.maxPrice)
+            }
+        }
+
+        @RepeatedTest(20)
+        fun `AMEND event should carry quantity within configured bounds`() {
+            svc.generateAndPublish()
+            val event = captureLastPublishedEvent()
+            if (event.action == OrderActionProto.AMEND) {
+                val quantity = BigDecimal(event.quantity)
+                assertThat(quantity)
+                    .isGreaterThanOrEqualTo(singleUserProps.minQuantity)
+                    .isLessThanOrEqualTo(singleUserProps.maxQuantity)
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -109,5 +203,12 @@ class OrderGeneratorServiceTest {
         val slot = slot<OrderEventProto>()
         verify { publisher.publish(capture(slot)) }
         return slot.captured
+    }
+
+    /** Captures the most recently published event (last call to publisher.publish). */
+    private fun captureLastPublishedEvent(): OrderEventProto {
+        val slots = mutableListOf<OrderEventProto>()
+        verify(atLeast = 1) { publisher.publish(capture(slots)) }
+        return slots.last()
     }
 }
